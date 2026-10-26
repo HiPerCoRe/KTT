@@ -3,6 +3,7 @@
 // at https://github.com/HiPerCoRe/KTT/blob/master/OnboardingGuide.md
 // before reading the tutorial's code.
 
+#include <algorithm>
 #include <iostream>
 #include <string>
 #include <vector>
@@ -56,32 +57,38 @@ int main(int argc, char** argv)
 
     const ktt::KernelDefinitionId definition = tuner.AddKernelDefinitionFromFile("vectorAddition", kernelFile, ndRangeDimensions,
         workGroupDimensions);
+    // By default, KTT makes a copy of the input data once and then doesn't update that copy. The intended solution is to update
+    // input data explicitly via Tuner methods, as using the ComputeInterface methods in the launcher is counted towards
+    // kernel duration. 
+    // For vector types, do not forget to set ArgumentManagementType to User and referenceUserData to true to ensure
+    // consistent behavior.
+    // 
+    // For scalars, it is the only solution. For vectors, another solution is to
+    // disable caching of read-only arguments, so they are pulled from user data every (tuning) run.
+    // This requires management type to be Framework and referenceUserData to be true. KTT's reference will,
+    // however, be invalidated whenever vector size changes.
 
-    const ktt::ArgumentId aId = tuner.AddArgumentVector(a, ktt::ArgumentAccessType::ReadOnly);
-    const ktt::ArgumentId bId = tuner.AddArgumentVector(b, ktt::ArgumentAccessType::ReadOnly);
-    const ktt::ArgumentId resultId = tuner.AddArgumentVector(result, ktt::ArgumentAccessType::WriteOnly);
+    // Note the explicit setting of management type and reference flag.
+    const ktt::ArgumentId aId = tuner.AddArgumentVector(a, ktt::ArgumentAccessType::ReadOnly,
+        ktt::ArgumentMemoryLocation::Device, ktt::ArgumentManagementType::User, true);
+    const ktt::ArgumentId bId = tuner.AddArgumentVector(b, ktt::ArgumentAccessType::ReadOnly,
+        ktt::ArgumentMemoryLocation::Device, ktt::ArgumentManagementType::User, true);
+
+    // Even write-only buffers must be user-managed if we intend to use Tuner::DownloadBuffer. Otherwise, buffers
+    // are cleared after each kernel run.
+    const ktt::ArgumentId resultId = tuner.AddArgumentVector(result, ktt::ArgumentAccessType::WriteOnly,
+        ktt::ArgumentMemoryLocation::Device, ktt::ArgumentManagementType::User, true);
     const ktt::ArgumentId scalarId = tuner.AddArgumentScalar(scalar);
     tuner.SetArguments(definition, {aId, bId, resultId, scalarId});
 
     const ktt::KernelId kernel = tuner.CreateSimpleKernel("Addition", definition);
 
-    // By default KTT makes a copy of the input data once and then doesn't update that copy. The intended solution is to update
-    // input data explicitly in the kernel launcher. For scalars, it is the only solution. For vectors, another solution is to
-    // set the argument to be referenced from user data, without making a KTT-managed copy (see overloads of AddArgumentVector),
-    // and then disable caching of read-only arguments, so they are pulled from user data every (tuning) run.
-    //
-    // Do note that any operations inside the kernel launcher will be included in the total duration measurement, and so could
-    // skew the best configuration selection, or the searcher behavior. In this case the effect should not be significant,
-    // because all configurations transfer the same amount of data, so they should be slowed roughly equally.
-    tuner.SetLauncher(kernel, [&a, &aId, &b, &bId, &scalar, &scalarId, &definition](ktt::ComputeInterface &interface){
-        interface.UpdateBuffer(aId, a.data());
-        interface.UpdateBuffer(bId, b.data());
-        interface.UpdateScalarArgument(scalarId, &scalar);
-        // Do not forget to also run the kernel definition.
-        interface.RunKernel(definition);
-    });
-
     tuner.SetTimeUnit(ktt::TimeUnit::Microseconds);
+
+    //  The buffer must be uploaded manually before running the kernel for the first time if management type is User. 
+    tuner.UpdateBuffer(aId);
+    tuner.UpdateBuffer(bId);
+    tuner.UpdateBuffer(resultId);
 
     // Run the specified kernel. The second argument would contain the configuration that the kernel should run with, 
     // if there were any. The third argument is used to retrieve the kernel output. For each kernel argument that
@@ -97,12 +104,27 @@ int main(int argc, char** argv)
     {
         std::cout << result[i] << " ";
     }
-    std::cout << "\n\n";
+    std::cout << "\n";
 
-    a.clear();
+    // It is also possible to download the data after running the kernel. Again, destination size must be greater or
+    // equal to buffer size.
+    std::vector<float>result_copy(numberOfElements);
+    tuner.DownloadBuffer(resultId, result_copy.data());
+    std::cout << "\nPrinting the first 10 elements from result_copy: \n";
+    for (size_t i = 0; i < 10; ++i) 
+    {
+        std:: cout << result_copy[i] << " ";
+    }
+    std::cout << "\n\n";
+    
+    std::fill(a.begin(), a.end(), 0);
     b.clear();
-    a.resize(numberOfElements, 0);
     b.resize(numberOfElements, 0);
+
+    // b was resized, so we must provide an explicit data pointer to it. On the other hand, a wasn't.
+    tuner.UpdateBuffer(aId);
+    tuner.UpdateBuffer(bId, b.data()/*, b.size() * sizeof(float)*/); // Would also need to give an explicit size if
+                                                                     // it was different in the end.
 
     tuner.Run(kernel, {}, {ktt::BufferOutputDescriptor(resultId, result.data())});
     // Print first ten elements from the result to check they were computed correctly.
@@ -114,6 +136,8 @@ int main(int argc, char** argv)
     std::cout << "\n\n";
 
     scalar = 0;
+    // Type of the input must have the same size as what the kernel argument was initialized with.
+    tuner.UpdateScalarArgument(scalarId, &scalar); 
 
     tuner.Run(kernel, {}, {ktt::BufferOutputDescriptor(resultId, result.data())});
     // Print first ten elements from the result to check they were computed correctly.
