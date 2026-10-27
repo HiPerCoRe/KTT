@@ -85,7 +85,11 @@ int main(int argc, char** argv)
 
     tuner.SetTimeUnit(ktt::TimeUnit::Microseconds);
 
-    //  The buffer must be uploaded manually before running the kernel for the first time if management type is User. 
+    // The buffer must be uploaded manually before running the kernel for the first time if management type is User. 
+    // Note that these method calls do not count towards DataMovementOverhead, unlike the default framework management.
+    // This does not affect which configuration is selected as best, as it is not counted in the kernel's total duration 
+    // (only calls made inside the kernel launcher are). If the user wishes to measure the data overhead regardless, it has 
+    // to be done manually.
     tuner.UpdateBuffer(aId);
     tuner.UpdateBuffer(bId);
     tuner.UpdateBuffer(resultId);
