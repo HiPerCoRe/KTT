@@ -606,6 +606,8 @@ public:
       * Updates data in the compute buffer of a specified vector argument. Same behavior as ComputeInterface::UpdateBuffer():
       * If the compute buffer of the argument does not exist yet, it is created and the data are uploaded into it.
       * If the buffer already exists, its content is replaced without any allocations.
+      * Except: duration of this call is not counted towards kernel's total duration (as it would be in the ComputeInterface 
+      * call) or data movement overhead (as it would be with framework-managed buffers).
       * @param id Id of vector argument which will be uploaded. The argument's management type should be User, not Framework,
       * to avoid duplicate work and possible inconsistencies.
       * @param dataPtr Pointer to the raw data in host memory. If dataPtr is nullptr, the data are taken from 
@@ -619,7 +621,10 @@ public:
     /** @fn void DownloadBuffer(const ArgumentId& id, void* destination, const size_t dataSize = 0)
       * Downloads the specified vector argument from its compute buffer. The transfer is submitted to the default queue and the
       * method returns after it is finished. The compute buffer of the argument must already exist, which is the case after the
-      * argument has been uploaded to the device for the first time (e.g., by a previous call to Run() or TuneIteration()).
+      * argument has been uploaded to the device for the first time (e.g., by a previous call to Run() or TuneIteration() or
+      * UpdateBuffer()).
+      * Note that duration of this call is not counted towards kernel's total duration (as it would be in the ComputeInterface 
+      * call) or data movement overhead (as it would be with framework-managed buffers).
       * @param id Id of vector argument which will be downloaded.
       * @param destination Buffer where the argument data will be downloaded. Its size must be equal or greater than the specified
       * data size.
@@ -631,6 +636,8 @@ public:
     /** @fn void ClearBuffer(const ArgumentId& id) = 0
       * Removes compute buffer for the specified vector argument. This method should be used mainly with arguments with
       * ::ArgumentManagementType set to User.
+      * Note that duration of this call is not counted towards kernel's total duration (as it would be in the ComputeInterface 
+      * call) or data movement overhead (as it would be with framework-managed buffers).
       * @param id Id of vector argument whose buffer will be removed.
       */
     void ClearBuffer(const ArgumentId& id);
