@@ -617,48 +617,13 @@ void CudaEngine::SetProfiling(const bool profiling)
     m_Configuration.SetProfiling(profiling);
 }
 
-TransferActionId CudaEngine::UploadArgument(KernelArgument& kernelArgument, const QueueId queueId)
-{
-    Timer timer;
-    timer.Start();
-
-    const auto id = kernelArgument.GetId();
-    Logger::LogDebug("Uploading buffer for argument with id " + id);
-
-    if (!ContainsKey(m_Streams, queueId))
-    {
-        throw KttException("Invalid stream index: " + std::to_string(queueId));
-    }
-
-    if (ContainsKey(m_Buffers, id))
-    {
-        throw KttException("Buffer for argument with id " + id + " already exists");
-    }
-
-    if (kernelArgument.GetMemoryType() != ArgumentMemoryType::Vector)
-    {
-        throw KttException("Argument with id " + id + " is not a vector and cannot be uploaded into buffer");
-    }
-
-    auto buffer = CreateBuffer(kernelArgument);
-    timer.Stop();
-
-    auto action = buffer->UploadData(*m_Streams[queueId], kernelArgument.GetData(), kernelArgument.GetDataSize());
-    action->IncreaseOverhead(timer.GetElapsedTime());
-    const auto actionId = action->GetId();
-
-    m_Buffers[id] = std::move(buffer);
-    m_TransferActions[actionId] = std::move(action);
-
-    return actionId;
-}
-
-TransferActionId CudaEngine::UpdateArgument(const ArgumentId& id, const QueueId queueId, const void* data,
+TransferActionId CudaEngine::UpdateArgument(KernelArgument& kernelArgument, const QueueId queueId, const void* data,
     const size_t dataSize)
 {
     Timer timer;
     timer.Start();
 
+    const auto id = kernelArgument.GetId();
     Logger::LogDebug("Updating buffer for argument with id " + id);
 
     if (!ContainsKey(m_Streams, queueId))
@@ -666,12 +631,26 @@ TransferActionId CudaEngine::UpdateArgument(const ArgumentId& id, const QueueId 
         throw KttException("Invalid stream index: " + std::to_string(queueId));
     }
 
+    if (kernelArgument.GetMemoryType() != ArgumentMemoryType::Vector)
+    {
+        throw KttException("Argument with id " + id + " is not a vector, UpdateArgument only handles the vector memory type.");
+    }
+
     if (!ContainsKey(m_Buffers, id))
     {
-        throw KttException("Buffer for argument with id " + id + " was not found");
+        Logger::LogDebug("Buffer for argument with id " + id + " was not found, creating new one");
+        auto buffer = CreateBuffer(kernelArgument);
+
+        m_Buffers[id] = std::move(buffer);
     }
 
     auto& buffer = *m_Buffers[id];
+    const void* actualData = data;
+    if (actualData == nullptr)
+    {
+        Logger::LogDebug("Data pointer is null, uploading data saved in the kernel argument with id " + id);
+        actualData = kernelArgument.GetData();
+    }
     size_t actualDataSize = dataSize;
 
     if (actualDataSize == 0)
@@ -681,7 +660,7 @@ TransferActionId CudaEngine::UpdateArgument(const ArgumentId& id, const QueueId 
 
     timer.Stop();
 
-    auto action = buffer.UploadData(*m_Streams[queueId], data, actualDataSize);
+    auto action = buffer.UploadData(*m_Streams[queueId], actualData, actualDataSize);
     action->IncreaseOverhead(timer.GetElapsedTime());
     const auto actionId = action->GetId();
     m_TransferActions[actionId] = std::move(action);

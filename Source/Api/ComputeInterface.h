@@ -209,20 +209,22 @@ public:
     /** @fn virtual void UploadBuffer(const ArgumentId& id) = 0
       * Uploads the specified vector argument into compute buffer. This method should be used mainly with arguments with
       * ::ArgumentManagementType set to User.
+      * @deprecated Use UpdateBuffer() instead.
       * @param id Id of vector argument which will be uploaded.
       */
-    virtual void UploadBuffer(const ArgumentId& id) = 0;
+    [[deprecated("Use UpdateBuffer() instead.")]] virtual void UploadBuffer(const ArgumentId& id) = 0;
 
     /** @fn virtual TransferActionId UploadBufferAsync(const ArgumentId& id, const QueueId queue) = 0
       * Uploads the specified vector argument into compute buffer. The data will be transferred asynchronously in the specified
       * queue.
+      * @deprecated Use UpdateBufferAsync() instead.
       * @param id Id of vector argument which will be uploaded.
       * @param queue Id of queue in which the command to upload argument will be submitted.
       * @return Id of asynchronous action corresponding to the issued data transfer command. The action must be waited for with
       * e.g., WaitForTransferAction(), SynchronizeQueue() methods. Otherwise, problems such as incorrectly recorded transfer
       * durations may occur.
       */
-    virtual TransferActionId UploadBufferAsync(const ArgumentId& id, const QueueId queue) = 0;
+    [[deprecated("Use UpdateBuffer() instead.")]] virtual TransferActionId UploadBufferAsync(const ArgumentId& id, const QueueId queue) = 0;
 
     /** @fn virtual void DownloadBuffer(const ArgumentId& id, void* destination, const size_t dataSize = 0) = 0
       * Downloads the specified vector argument from compute buffer.
@@ -252,23 +254,25 @@ public:
         const size_t dataSize = 0) = 0;
 
     /** @fn virtual void UpdateBuffer(const ArgumentId& id, const void* data, const size_t dataSize = 0) = 0
-      * Updates data in compute buffer of the specified vector argument.
+      * Updates data in compute buffer of the specified vector argument. If it's not present on the device, allocates
+      * space on the device and uploads the buffer contents.
       * @param id Id of vector argument which will be updated.
       * @param data Pointer to new data for vector argument. Its size must be equal or greater than the specified data size.
-      * The data must have matching kernel argument data type.
+      * The data must have matching kernel argument data type. If nullptr, data saved in the argument will be used.
       * @param dataSize Size in bytes of buffer portion which will be updated, starting with the first byte. If zero, the entire
       * buffer will be updated.
       */
-    virtual void UpdateBuffer(const ArgumentId& id, const void* data, const size_t dataSize = 0) = 0;
+    virtual void UpdateBuffer(const ArgumentId& id, const void* data = nullptr, const size_t dataSize = 0) = 0;
 
     /** @fn virtual TransferActionId UpdateBufferAsync(const ArgumentId& id, const QueueId queue, const void* data,
       * const size_t dataSize) = 0
-      * Updates data in compute buffer of the specified vector argument. The data will be transferred asynchronously in the
+      * Updates data in compute buffer of the specified vector argument. If it's not present on the device, allocates
+      * space on the device and uploads the buffer contents. The data will be transferred asynchronously in the
       * specified queue.
       * @param id Id of vector argument which will be updated.
       * @param queue Id of queue in which the command to update argument will be submitted.
       * @param data Pointer to new data for vector argument. Its size must be equal or greater than the specified data size.
-      * The data must have matching kernel argument data type.
+      * The data must have matching kernel argument data type. If nullptr, data saved in the argument will be used.
       * @param dataSize Size in bytes of buffer portion which will be updated, starting with the first byte. If zero, the entire
       * buffer will be updated.
       * @return Id of asynchronous action corresponding to the issued data transfer command. The action must be waited for with
