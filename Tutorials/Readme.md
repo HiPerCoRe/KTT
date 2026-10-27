@@ -38,7 +38,7 @@ Showcases features that are good to know about, but might not be necessary for a
 - CompilerTuning: Explains the difference between compiler options, compiler tuning, and separate compiler tuning on a sample C++ kernel.
 - VectorArgumentCustomization: Shows customization of vector argument handling -- argument memory location (device/host),
     buffer management type (framework/user, with manual uploading and clearing in a kernel launcher), and referencing
-    user-provided buffers directly instead of copying them. Has versions with C++ host code for tuning CUDA and OpenCL.
+    user-provided buffers directly instead of copying them.
 - KernelRunning: Shows how to run kernels without tuning, to process actual input data. Includes a demonstration on how to
     transfer new data to the kernel between runs, and how to retrieve that data after each run. In effect, this tutorial lets
     one learn how to use KTT in place of a traditional compute API.
