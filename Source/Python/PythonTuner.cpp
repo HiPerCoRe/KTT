@@ -497,6 +497,10 @@ void InitializePythonTuner(py::module_& module)
             py::arg("destination"),
             py::arg("dataSize") = 0
         )
+        .def("ClearBuffer",
+            &ktt::Tuner::ClearBuffer,
+            py::arg("id")
+        )
         .def("Run", py::overload_cast<const ktt::KernelId, const ktt::KernelConfiguration&,
             const std::vector<ktt::BufferOutputDescriptor>&>(&ktt::Tuner::Run))
         .def("Run", py::overload_cast<const ktt::KernelId, const ktt::KernelConfiguration&, const ktt::KernelDimensions&,
