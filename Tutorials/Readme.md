@@ -29,6 +29,16 @@ Showcases basic features that will likely be involved in nearly every project.
 
 ## Intermediate
 Showcases features that are good to know about, but might not be necessary for all projects.
+- KernelLauncher: KTT allows the user to define a custom kernel launcher. This tutorial shows how one can split the work between
+    GPU and CPU with this.
+- CompositeKernel: A kernel can also be made of several kernel definitions that are tuned together. This tutorial splits a blur
+    into two passes and runs them in order with a kernel launcher. The work-group size of every definition is tuned on its own, and
+    a common tuning parameter chooses in which direction the intermediate result is stored. There is also a practical explanation on
+    the difference between kernel and kernel definition.
+- CompilerTuning: Explains the difference between compiler options, compiler tuning, and separate compiler tuning on a sample C++ kernel.
+- VectorArgumentCustomization: Shows customization of vector argument handling -- argument memory location (device/host),
+    buffer management type (framework/user, with manual uploading and clearing in a kernel launcher), and referencing
+    user-provided buffers directly instead of copying them. Has versions with C++ host code for tuning CUDA and OpenCL.
 - KernelRunning: Shows how to run kernels without tuning, to process actual input data. Includes a demonstration on how to
     transfer new data to the kernel between runs, and how to retrieve that data after each run. In effect, this tutorial lets
     one learn how to use KTT in place of a traditional compute API.
@@ -37,13 +47,6 @@ Showcases features that are good to know about, but might not be necessary for a
     to already process actual input. Lastly, tuning can be restarted if input shape changes significantly enough, though that is
     outside the scope of this tutorial. Similarly, an actual application will already have its own system for managing the
     compute API. See ComputeApiInitializer in the Advanced tutorials.
-- KernelLauncher: KTT allows the user to define a custom kernel launcher. This tutorial shows how one can split the work between
-    GPU and CPU with this.
-- CompositeKernel: A kernel can also be made of several kernel definitions that are tuned together. This tutorial splits a blur
-    into two passes and runs them in order with a kernel launcher. The work-group size of every definition is tuned on its own, and
-    a common tuning parameter chooses in which direction the intermediate result is stored. There is also a practical explanation on
-    the difference between kernel and kernel definition.
-- CompilerTuning: Explains the difference between compiler options, compiler tuning, and separate compiler tuning on a sample C++ kernel.
 
 <!-- TODO: database stuff;
            profiling searcher (or move to advanced?) -->
@@ -61,9 +64,6 @@ Mostly customization of things usually hidden in KTT's internals.
 - ComputeApiInitializer: Shows that compute API objects (context, streams, buffers) can be created externally and imported
     into KTT through a ComputeApiInitializer; existing device buffers can be added as arguments by handle.
     Has versions with C++ host code for tuning CUDA and OpenCL.
-- VectorArgumentCustomization: Shows customization of vector argument handling -- argument memory location (device/host),
-    buffer management type (framework/user, with manual uploading and clearing in a kernel launcher), and referencing
-    user-provided buffers directly instead of copying them. Has versions with C++ host code for tuning CUDA and OpenCL.
 - PythonInterfaces: Shows that it is possible to pass Python functions
     to KTT, e.g. to define a custom searcher or stop condition.
 
