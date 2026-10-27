@@ -62,7 +62,8 @@ int main(int argc, char** argv)
 
     // Argument management type specifies who is responsible for uploading and clearing compute API buffer corresponding to the
     // specified argument. If it is framework, the buffer will be handled automatically. If it is user, the buffer must be managed
-    // manually inside kernel launcher.
+    // manually by relevant Tuner methods or inside a kernel launcher. This tutorial only shows the kernel launcher approach.
+    // Tuner method approach is shown in the following tutorials.
     constexpr ktt::ArgumentManagementType management = ktt::ArgumentManagementType::User;
 
     // Reference user data flag specifies whether the argument will be copied into internal KTT buffer or accessed directly from
@@ -82,18 +83,22 @@ int main(int argc, char** argv)
     {
         // User is responsible for buffer management in this case. That means uploading the corresponding buffers before kernel is
         // run and clearing them afterwards. Note that if the given buffer is a result buffer which is validated, it must not be
-        // cleared right after the kernel run is finished. It should be cleared during the next launcher invocation. The buffer
-        // handling is counted as overhead during measurement of computation duration.
+        // cleared right after the kernel run is finished. It should be cleared during the next launcher invocation.
+        // NOTE that buffer handling in this way is counted towards the kernel's total duration, which may affect searcher
+        // behavior.
         tuner.SetLauncher(kernel, [kernel, aId, bId](ktt::ComputeInterface& interface)
         {
-            interface.UploadBuffer(aId);
-            interface.UploadBuffer(bId);
+            interface.UpdateBuffer(aId);
+            interface.UpdateBuffer(bId);
 
             interface.RunKernel(kernel);
 
             interface.ClearBuffer(aId);
             interface.ClearBuffer(bId);
         });
+        // An alternative is to call the corresponding Tuner methods before and after each kernel invocation.
+        // That is impossible for offline tuning, but recommended for kernel running or dynamic tuning (see following
+        // tutorials).
     }
 
     tuner.SetReferenceComputation(resultId, [&a, &b](void* buffer)
