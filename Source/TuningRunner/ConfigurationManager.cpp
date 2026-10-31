@@ -25,12 +25,14 @@ void ConfigurationManager::SetSearcher(const KernelId id, std::unique_ptr<Search
 void ConfigurationManager::SetRefinementParameters(const KernelId id, const RefinementParameters& parameters)
 {
     Logger::LogDebug("Setting refinement parameters for kernel with id " + std::to_string(id));
-    m_RefinementParameters[id] = parameters;
 
     if (HasData(id))
     {
         m_ConfigurationData[id]->SetRefinementParameters(parameters);
     }
+
+    m_RefinementParameters[id] = parameters;
+
 }
 
 void ConfigurationManager::FinishExploration(const KernelId id)
@@ -38,6 +40,14 @@ void ConfigurationManager::FinishExploration(const KernelId id)
     if (HasData(id))
     {
         m_ConfigurationData[id]->FinishExploration();
+    }
+}
+
+void ConfigurationManager::CancelRefinement(const KernelId id)
+{
+    if (HasData(id))
+    {
+        m_ConfigurationData[id]->CancelRefinement();
     }
 }
 

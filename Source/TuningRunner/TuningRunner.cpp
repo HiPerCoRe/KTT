@@ -48,7 +48,7 @@ std::vector<KernelResult> TuningRunner::Tune(const Kernel& kernel, const KernelD
     std::vector<KernelResult> results;
 //    KernelResult result(kernel.GetName(), m_ConfigurationManager->GetCurrentConfiguration(id));
 
-    while (!m_ConfigurationManager->IsDataProcessed(id))
+    while (m_ConfigurationManager->GetTuningPhase(id) == TuningPhase::Exploration)
     {
         KernelResult result(kernel.GetName(), m_ConfigurationManager->GetCurrentConfiguration(id), "");
         KernelResult multiResult(kernel.GetName(), m_ConfigurationManager->GetCurrentConfiguration(id), ktt::Timestamp::GetTimestamp());
@@ -90,6 +90,13 @@ std::vector<KernelResult> TuningRunner::Tune(const Kernel& kernel, const KernelD
         {
             break;
         }
+    }
+
+    if (m_ConfigurationManager->GetTuningPhase(id) == TuningPhase::Refinement)
+    {
+        Logger::LogWarning("Refinement is supported only in dynamic tuning (TuneIteration), skipping it in "
+            + tuningMode + " tuning for kernel " + kernel.GetName());
+        m_ConfigurationManager->CancelRefinement(id);
     }
 
     Logger::LogInfo("Ending " + tuningMode + " tuning for kernel " + kernel.GetName() + ", total number of tested configurations is "
@@ -181,7 +188,7 @@ std::vector<KernelResult> TuningRunner::SimulateTuning(const Kernel& kernel, con
         stopCondition->Initialize(configurationCount);
     }
 
-    while (!m_ConfigurationManager->IsDataProcessed(id))
+    while (m_ConfigurationManager->GetTuningPhase(id) == TuningPhase::Exploration)
     {
         if (stopCondition != nullptr && stopCondition->IsFulfilled())
         {
@@ -225,6 +232,12 @@ std::vector<KernelResult> TuningRunner::SimulateTuning(const Kernel& kernel, con
             stopCondition->Update(result);
             Logger::LogInfo(stopCondition->GetStatusString());
         }
+    }
+
+    if (m_ConfigurationManager->GetTuningPhase(id) == TuningPhase::Refinement)
+    {
+        Logger::LogWarning("Refinement is supported only in dynamic tuning (TuneIteration), skipping it in simulated tuning for kernel " + kernel.GetName());
+        m_ConfigurationManager->CancelRefinement(id);
     }
 
     Logger::LogInfo("Ending simulated tuning for kernel " + kernel.GetName() + ", total number of tested configurations is "

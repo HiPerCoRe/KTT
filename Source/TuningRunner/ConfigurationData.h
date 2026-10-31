@@ -45,6 +45,7 @@ public:
     bool IsExplorationFinished() const;
     TuningPhase GetPhase() const;
     void FinishExploration();
+    void CancelRefinement();
     void SetRefinementParameters(const RefinementParameters& parameters);
 
     bool IsSeparateOptionsGroup() const;

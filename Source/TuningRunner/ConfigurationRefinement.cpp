@@ -16,8 +16,16 @@ namespace ktt
 
     bool ConfigurationRefinement::Start(const std::vector<std::pair<KernelConfiguration, Nanoseconds>>& history)
     {
+        if (!m_Parameters.IsEnabled())
+        {
+            Logger::LogInfo("Refinement is disabled, skipping refinement");
+            m_Finished = true;
+            return false;
+        }
+
         if (!m_Parameters.IsValid())
         {
+            Logger::LogWarning("Refinement parameters are invalid, skipping refinement");
             m_Finished = true;
             return false;
         }
@@ -29,14 +37,46 @@ namespace ktt
             return false;
         }
 
-        auto sortedHistory = history;
+        std::vector<std::pair<KernelConfiguration, std::vector<Nanoseconds>>> grouped;
+
+        for (const auto& [configuration, duration] : history)
+        {
+            auto it = std::find_if(grouped.begin(), grouped.end(), [&configuration](const auto& entry)
+            {
+                return entry.first == configuration;
+            });
+
+            if (it == grouped.end())
+            {
+                grouped.push_back({configuration, {duration}});
+            }
+            else
+            {
+                it->second.push_back(duration);
+            }
+        }
+
+        std::vector<std::pair<KernelConfiguration, Nanoseconds>> uniqueHistory;
+        uniqueHistory.reserve(grouped.size());
+
+        for (const auto& [configuration, durations] : grouped)
+        {
+            uniqueHistory.push_back({configuration, PreciseMeasurementParameters::CalculateDuration(durations, DurationCalculationMethod::Median)});
+        }
+
+        if (uniqueHistory.size() < history.size())
+        {
+            Logger::LogInfo("Refinement merged " + std::to_string(history.size() - uniqueHistory.size()) + " duplicate configurations from exploration history");
+        }
+
+        auto sortedHistory = uniqueHistory;
         std::sort(sortedHistory.begin(), sortedHistory.end(),
             [](const auto& a, const auto& b) { return a.second < b.second; });
 
-        size_t candidateCount = static_cast<size_t>(std::ceil(m_Parameters.fraction * static_cast<double>(history.size())));
+        size_t candidateCount = static_cast<size_t>(std::ceil(m_Parameters.fraction * static_cast<double>(uniqueHistory.size())));
         candidateCount = std::max(candidateCount, static_cast<size_t>(m_Parameters.minCandidates));
         candidateCount = std::min(candidateCount, static_cast<size_t>(m_Parameters.maxCandidates));
-        candidateCount = std::min(candidateCount, history.size());
+        candidateCount = std::min(candidateCount, uniqueHistory.size());
 
         if (m_Parameters.maxRelativeGap.has_value() && !sortedHistory.empty())
         {
@@ -110,6 +150,11 @@ namespace ktt
     KernelConfiguration ConfigurationRefinement::GetWinner() const
     {
         return m_Winner;
+    }
+
+    void ConfigurationRefinement::Cancel()
+    {
+        m_Finished = true;
     }
 
     void ConfigurationRefinement::AdvancePosition()

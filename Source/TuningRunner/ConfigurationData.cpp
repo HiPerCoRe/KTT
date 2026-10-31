@@ -264,6 +264,17 @@ void ConfigurationData::FinishExploration()
     TransitionToRefinement();
 }
 
+void ConfigurationData::CancelRefinement()
+{
+    if (GetPhase() != TuningPhase::Refinement)
+    {
+        return;
+    }
+
+    m_Refinement->Cancel();
+    m_RefinementWinner = m_BestConfiguration.first;
+}
+
 void ConfigurationData::SetRefinementParameters(const RefinementParameters& parameters)
 {
     if (m_Refinement != nullptr)

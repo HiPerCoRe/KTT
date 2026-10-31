@@ -24,6 +24,8 @@ public:
 
     KernelConfiguration GetWinner() const;
 
+    void Cancel();
+
 private:
     struct Candidate
     {
