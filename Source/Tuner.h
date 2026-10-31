@@ -30,6 +30,8 @@
 #include <Utility/Logger/LoggingLevel.h>
 #include <KttTypes.h>
 #include <Api/Configuration/PreciseMeasurementParameters.h>
+#include <Api/Configuration/RefinementParameters.h>
+#include <Api/Configuration/TuningPhase.h>
 
 // Data holders
 #include <Api/Configuration/DimensionVector.h>
@@ -878,6 +880,27 @@ public:
       * also bases its decisions on profiling counters and kernel durations measured during tuning, which fluctuate between tuning runs.
       */
     void SetProfileBasedSearcher(const KernelId id, const std::string& modelPath, const bool useBuiltinModule = true, const uint batchSize = 5, const uint neighborSize = 100, const uint randomSize = 10, const std::optional<uint64_t> seed = std::nullopt);
+
+  /** @fn void SetRefinementParameters(const KernelId id, const RefinementParameters& parameters)
+    * Sets refinement phase parameters for the specified kernel during dynamic tuning.
+    * @param id Id of kernel for which the refinement parameters will be set.
+    * @param parameters Parameters controlling top candidates selection and repeated measurements.
+    */
+  void SetRefinementParameters(const KernelId id, const RefinementParameters& parameters);
+
+  /** @fn void FinishExploration(const KernelId id)
+    * Ends the exploration phase for the specified kernel early and transitions to the refinement phase (if configured)
+    * or directly to the finished phase.
+    * @param id Id of kernel whose exploration phase will be finished.
+    */
+  void FinishExploration(const KernelId id);
+
+  /** @fn TuningPhase GetTuningPhase(const KernelId id) const
+    * Returns the current dynamic tuning phase for the specified kernel.
+    * @param id Id of kernel for which the tuning phase will be retrieved.
+    * @return Current tuning phase of the specified kernel. See ::TuningPhase for more information.
+    */
+  TuningPhase GetTuningPhase(const KernelId id) const;
 
     /** @fn void InitializeConfigurationData(const KernelId id)
       * Generates configuration space and initializes searcher for the specified kernel.

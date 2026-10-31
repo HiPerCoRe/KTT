@@ -238,6 +238,21 @@ void TuningRunner::SetSearcher(const KernelId id, std::unique_ptr<Searcher> sear
     m_ConfigurationManager->SetSearcher(id, std::move(searcher));
 }
 
+void TuningRunner::SetRefinementParameters(const KernelId id, const RefinementParameters& parameters)
+{
+    m_ConfigurationManager->SetRefinementParameters(id, parameters);
+}
+
+void TuningRunner::FinishExploration(const KernelId id)
+{
+    m_ConfigurationManager->FinishExploration(id);
+}
+
+TuningPhase TuningRunner::GetTuningPhase(const KernelId id) const
+{
+    return m_ConfigurationManager->GetTuningPhase(id);
+}
+
 void TuningRunner::InitializeConfigurationData(const Kernel& kernel)
 {
     m_ConfigurationManager->InitializeData(kernel);

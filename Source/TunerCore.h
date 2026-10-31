@@ -16,6 +16,8 @@
 #include <TuningRunner/TuningRunner.h>
 #include <Utility/Logger/LoggingLevel.h>
 #include <KttTypes.h>
+#include <Api/Configuration/RefinementParameters.h>
+#include <Api/Configuration/TuningPhase.h>
 
 namespace ktt
 {
@@ -99,6 +101,9 @@ public:
     std::vector<KernelResult> SimulateKernelTuning(const KernelId id, const std::vector<KernelResult>& results,
         std::unique_ptr<StopCondition> stopCondition);
     void SetSearcher(const KernelId id, std::unique_ptr<Searcher> searcher);
+    void SetRefinementParameters(const KernelId id, const RefinementParameters& parameters);
+    void FinishExploration(const KernelId id);
+    TuningPhase GetTuningPhase(const KernelId id) const;
     void InitializeConfigurationData(const KernelId id);
     void ClearConfigurationData(const KernelId id);
     uint64_t GetConfigurationsCount(const KernelId id) const;
