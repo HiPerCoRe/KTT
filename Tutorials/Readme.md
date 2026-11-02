@@ -29,7 +29,8 @@ Showcases basic features that will likely be involved in nearly every project.
 
 ## Intermediate
 Showcases features that are good to know about, but might not be necessary for all projects.
-- KernelLauncher: KTT allows the user to define a custom kernel launcher. This tutorial shows how one can split the work between
+- KernelLauncher: KTT allows the user to define a custom kernel launcher -- a C++ lambda function that runs on the CPU
+    and can launch kernel definitions through a ComputeInterface instance. This tutorial shows how one can split the work between
     GPU and CPU with this.
 - CompositeKernel: A kernel can also be made of several kernel definitions that are tuned together. This tutorial splits a blur
     into two passes and runs them in order with a kernel launcher. The work-group size of every definition is tuned on its own, and
