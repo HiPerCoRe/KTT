@@ -4,6 +4,7 @@
 0101TunerInitializationCuda
 0101TunerInitializationOpenCl
 0101TunerInitializationVulkan
+0102KernelTuningCpp
 0102KernelTuningCuda
 0102KernelTuningOpenCl
 0102KernelTuningVulkan
@@ -17,7 +18,6 @@
 0201KernelLauncherOpenCl
 0202CompositeKernelOpenCl
 0203CompilerTuningCpp
-0204VectorArgumentCustomizationCuda
 0204VectorArgumentCustomizationOpenCl
 0205KernelRunningOpenCl
 0206DynamicTuningOpenCl

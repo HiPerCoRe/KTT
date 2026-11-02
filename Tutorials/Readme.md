@@ -14,8 +14,8 @@ Showcases basic features that will likely be involved in nearly every project.
 - TunerInitialization: Basic tuner initialization. Also a sanity check that KTT is working correctly and can access the 
     accelerator devices.
 - KernelTuning: Basic kernel tuning tutorial; shows kernel arguments, reference computation, 
-    tuning parameters, thread modifiers, and offline tuning. Has versions with C++ host code for tuning CUDA, OpenCL, and Vulkan,
-    with Python host code for tuning CUDA, and with a JSON script for tuning CUDA.
+    tuning parameters, thread modifiers, and offline tuning. Has versions with C++ host code for tuning CUDA, OpenCL, Vulkan,
+    and C++ kernels.
 - ProcessingKernelResults: A few basic ways that one can work with the kernel results after tuning.
 - StopConditions: Showcases the use of stop conditions on a very simple kernel. Includes a union stop condition.
 - TuningConstraints: Showcases the use of tuning constraints to filter out configurations that would fail or be suboptimal,
