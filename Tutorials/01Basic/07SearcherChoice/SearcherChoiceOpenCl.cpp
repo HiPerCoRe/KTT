@@ -98,7 +98,7 @@ int main(int argc, char** argv)
     tuner.SetSearcher(kernel, std::make_unique<ktt::RandomSearcher>());
     // Another choice is the Markov chain Monte Carlo searcher (McmcSearcher).
     // tuner.SetSearcher(kernel, std::make_unique<ktt::McmcSearcher>());
-    // One can also use the profiling searcher, see the corresponding tutorial in the Intermediate category.
+    // One can also use the profile-based searcher, which is more complicated to set up. See the corresponding tutorial in the Adv category.
 
     const std::vector<ktt::KernelResult> results = tuner.Tune(kernel);
 
