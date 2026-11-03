@@ -62,10 +62,13 @@ Mostly customization of things usually hidden in KTT's internals.
 - SimulatedTuning: One can simulate tuning without actually runing any kernels. This is useful especially when developing a new
     searcher, as simulated tuning is much faster than the real version. Requires a record of results from running every configuration,
     so timings can be supplied.
+- PreciseMeasurement: Shows the PreciseMeasurementParameters class and its behavior when a power measurement library 
+    is not linked.
+- PowerMeasurement: Explains details and caveats for using the above class to measure power consumption of a kernel.
+    Measuring power consumption is complicated by many sources of noise, much more so than ordinary performance measurement.
+    Special considerations are thus needed.
 - ComputeApiInitializer: Shows that compute API objects (context, streams, buffers) can be created externally and imported
     into KTT through a ComputeApiInitializer; existing device buffers can be added as arguments by handle.
     Has versions with C++ host code for tuning CUDA and OpenCL.
 - PythonInterfaces: Shows that it is possible to pass Python functions
     to KTT, e.g. to define a custom searcher or stop condition.
-
-<!-- TODO: precise measurement (advanced?), power consumption optimization (advanced?), etc -->
