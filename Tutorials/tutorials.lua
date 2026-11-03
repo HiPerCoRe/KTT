@@ -28,7 +28,7 @@ tutorialApis =
 -- compute API headers too and needs to link the libraries.
 tutorialsUsingComputeApiHeaders =
 {
-    ["03Advanced/05ComputeApiInitializer"] = true,
+    ["ComputeApiInitializer"] = true,
 }
 
 local function sorted(list)
@@ -60,8 +60,11 @@ function tutorialApiOfHostFile(file)
     return nil
 end
 
-function addTutorialProject(category, tutorial, api, tutorialFiles, kernelFile)
-    project(category .. path.getbasename(tutorial) .. api.suffix)
+function addTutorialProject(category, tutorialPath, api, tutorialFiles, kernelFile)
+    local tutorial = path.getbasename(tutorialPath)
+    -- Assumes that tutorial base names don't start with numbers
+    local tutorialName = tutorial:gsub("^%d+", "")
+    project(category .. tutorial .. api.suffix)
         kind "ConsoleApp"
         files {table.unpack(tutorialFiles)}
         includedirs {"../Source"}
@@ -72,7 +75,7 @@ function addTutorialProject(category, tutorial, api, tutorialFiles, kernelFile)
             defines {tutorialKernelFileDefine(kernelFile)}
         end
 
-        if tutorialsUsingComputeApiHeaders[tutorial] then
+        if tutorialsUsingComputeApiHeaders[tutorialName] then
             linkComputeLibraries()
         end
 end
