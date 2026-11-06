@@ -451,6 +451,18 @@ project "Ktt"
     targetname("ktt")
     linkAllLibraries()
 
+    -- The JIT preamble for the C++ backend is derived from CppKernelDefines.h at build time, so the
+    -- injected text and the header can never drift. The generated file is a build artifact.
+    local cppDefinesScript = _MAIN_SCRIPT_DIR .. "/Scripts/generate_cpp_kernel_defines.py"
+    local cppDefinesHeader = _MAIN_SCRIPT_DIR .. "/Source/ComputeEngine/Cpp/CppKernelDefines.h"
+    local cppDefinesOutput = _MAIN_SCRIPT_DIR .. "/Source/ComputeEngine/Cpp/CppKernelDefines.generated.h"
+
+    filter "system:windows"
+        prebuildcommands {"python \"" .. cppDefinesScript .. "\" \"" .. cppDefinesHeader .. "\" \"" .. cppDefinesOutput .. "\""}
+    filter "system:not windows"
+        prebuildcommands {"python3 \"" .. cppDefinesScript .. "\" \"" .. cppDefinesHeader .. "\" \"" .. cppDefinesOutput .. "\""}
+    filter {}
+
 -- Tuning loader and launcher
 if _OPTIONS["tuning-loader"] then
     if not _OPTIONS["python"] then
