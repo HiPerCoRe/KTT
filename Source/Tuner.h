@@ -883,6 +883,7 @@ public:
 
   /** @fn void SetRefinementParameters(const KernelId id, const RefinementParameters& parameters)
     * Sets refinement phase parameters for the specified kernel during dynamic tuning.
+    * Refinement is implicitly turned off,has to be called before tuning or else the previous configurations wont be taken in consideration.
     * @param id Id of kernel for which the refinement parameters will be set.
     * @param parameters Parameters controlling top candidates selection and repeated measurements.
     */

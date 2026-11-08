@@ -36,7 +36,6 @@ struct KTT_API RefinementParameters
     RefinementParameters(const double fraction, const uint64_t minCandidates, const uint64_t maxCandidates,
         const uint64_t minExplored, const uint64_t rounds, const std::optional<double> maxRelativeGap = std::nullopt);
 
-    bool IsEnabled() const;
     bool IsValid() const;
 };
 

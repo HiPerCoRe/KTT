@@ -4,6 +4,7 @@
 #include <utility>
 #include <vector>
 #include <memory>
+#include <optional>
 
 #include <Api/Configuration/KernelConfiguration.h>
 #include <Api/Searcher/Searcher.h>
@@ -23,7 +24,7 @@ class ConfigurationData
 public:
     explicit ConfigurationData(Searcher& searcher, const Kernel& kernel, const bool isSeparateOptionsGroup = false,
         const KernelConfiguration& baseConfiguration = KernelConfiguration(),
-        const RefinementParameters& refinementParameters = RefinementParameters());
+        const std::optional<RefinementParameters>& refinementParameters = std::nullopt);
     ~ConfigurationData();
 
     bool CalculateNextConfiguration(const KernelResult& previousResult);
@@ -63,7 +64,7 @@ private:
 
     std::vector<std::pair<KernelConfiguration, Nanoseconds>> m_History;
     bool m_ExplorationFinishedByUser;
-    RefinementParameters m_RefinementParameters;
+    std::optional<RefinementParameters> m_RefinementParameters;
     std::unique_ptr<ConfigurationRefinement> m_Refinement;
     KernelConfiguration m_RefinementWinner;
 

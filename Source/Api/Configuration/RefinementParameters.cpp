@@ -23,18 +23,9 @@ RefinementParameters::RefinementParameters(const double fraction, const uint64_t
     maxRelativeGap(maxRelativeGap)
 {}
 
-bool RefinementParameters::IsEnabled() const
-{
-    return fraction > 0.0 && maxCandidates > 0 && rounds > 0;
-}
 
 bool RefinementParameters::IsValid() const
 {
-    if (!IsEnabled())
-    {
-        return true;
-    }
-
     return fraction > 0.0 && fraction < 1.0 &&
            minCandidates <= maxCandidates &&
            minCandidates > 0 && rounds > 0 &&

@@ -16,12 +16,6 @@ namespace ktt
 
     bool ConfigurationRefinement::Start(const std::vector<std::pair<KernelConfiguration, Nanoseconds>>& history)
     {
-        if (!m_Parameters.IsEnabled())
-        {
-            Logger::LogInfo("Refinement is disabled, skipping refinement");
-            m_Finished = true;
-            return false;
-        }
 
         if (!m_Parameters.IsValid())
         {

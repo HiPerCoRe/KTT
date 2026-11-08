@@ -72,7 +72,7 @@ void ConfigurationManager::InitializeData(const Kernel& kernel, const bool isSep
         m_Searchers[id] = std::make_unique<DeterministicSearcher>();
     }
 
-    RefinementParameters refParams;
+    std::optional<RefinementParameters> refParams;
     if (ContainsKey(m_RefinementParameters, id))
     {
         refParams = m_RefinementParameters[id];

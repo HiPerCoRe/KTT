@@ -15,7 +15,7 @@ namespace ktt
 {
 
 ConfigurationData::ConfigurationData(Searcher& searcher, const Kernel& kernel, const bool isSeparateOptionsGroup,
-    const KernelConfiguration& baseConfiguration, const RefinementParameters& refinementParameters) :
+    const KernelConfiguration& baseConfiguration, const std::optional<RefinementParameters>& refinementParameters) :
     m_BestConfiguration({KernelConfiguration(), InvalidDuration}),
     m_Generator(searcher.HasSeed() ? RandomIntGenerator<uint64_t>(searcher.GetSeed()) : RandomIntGenerator<uint64_t>()),
     m_Searcher(searcher),
@@ -58,7 +58,11 @@ bool ConfigurationData::CalculateNextConfiguration(const KernelResult& previousR
 
     if (previousResult.IsValid())
     {
-        m_History.push_back({previousConfiguration, previousResult.GetTotalDuration()});
+        if (m_RefinementParameters.has_value())
+        {
+            m_History.push_back({previousConfiguration, previousResult.GetTotalDuration()});
+        }
+
         UpdateBestConfiguration(previousResult);
     }
 
@@ -326,7 +330,13 @@ void ConfigurationData::TransitionToRefinement()
         return;
     }
 
-    m_Refinement = std::make_unique<ConfigurationRefinement>(m_RefinementParameters);
+    if (!m_RefinementParameters.has_value())
+    {
+        Logger::LogInfo("Refinement is not configured for kernel " + m_Kernel.GetName() + ", skipping it");
+        return;
+    }
+
+    m_Refinement = std::make_unique<ConfigurationRefinement>(*m_RefinementParameters);
 
     if (!m_Refinement->Start(m_History))
     {
