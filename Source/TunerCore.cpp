@@ -315,6 +315,11 @@ void TunerCore::FinishExploration(const KernelId id)
     m_TuningRunner->FinishExploration(id);
 }
 
+void TunerCore::ResumeExploration(const KernelId id)
+{
+    m_TuningRunner->ResumeExploration(id);
+}
+
 TuningPhase TunerCore::GetTuningPhase(const KernelId id) const
 {
     return m_TuningRunner->GetTuningPhase(id);

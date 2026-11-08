@@ -700,6 +700,18 @@ void Tuner::FinishExploration(const KernelId id)
     }
 }
 
+void Tuner::ResumeExploration(const KernelId id)
+{
+    try
+    {
+        m_Tuner->ResumeExploration(id);
+    }
+    catch (const KttException& exception)
+    {
+        TunerCore::Log(LoggingLevel::Error, exception.what());
+    }
+}
+
 TuningPhase Tuner::GetTuningPhase(const KernelId id) const
 {
     try

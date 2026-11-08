@@ -896,6 +896,13 @@ public:
     */
   void FinishExploration(const KernelId id);
 
+  /** @fn void ResumeExploration(const KernelId id)
+  * Resumes exploration of the specified kernel after it was finished by FinishExploration. The refinement winner becomes
+  * the best configuration and only the refined candidates are kept for the next refinement.
+  * @param id Id of kernel whose exploration will be resumed.
+  */
+  void ResumeExploration(const KernelId id);
+
   /** @fn TuningPhase GetTuningPhase(const KernelId id) const
     * Returns the current dynamic tuning phase for the specified kernel.
     * @param id Id of kernel for which the tuning phase will be retrieved.

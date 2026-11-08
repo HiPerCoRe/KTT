@@ -32,6 +32,7 @@ public:
     void SetSearcher(const KernelId id, std::unique_ptr<Searcher> searcher);
     void SetRefinementParameters(const KernelId id, const RefinementParameters& parameters);
     void FinishExploration(const KernelId id);
+    void ResumeExploration(const KernelId id);
     TuningPhase GetTuningPhase(const KernelId id) const;
     void InitializeConfigurationData(const Kernel& kernel);
     void ClearConfigurationData(const KernelId id, const bool clearSearcher = false);

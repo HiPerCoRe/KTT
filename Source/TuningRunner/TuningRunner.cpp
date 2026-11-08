@@ -261,6 +261,11 @@ void TuningRunner::FinishExploration(const KernelId id)
     m_ConfigurationManager->FinishExploration(id);
 }
 
+void TuningRunner::ResumeExploration(const KernelId id)
+{
+    m_ConfigurationManager->ResumeExploration(id);
+}
+
 TuningPhase TuningRunner::GetTuningPhase(const KernelId id) const
 {
     return m_ConfigurationManager->GetTuningPhase(id);
