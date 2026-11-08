@@ -46,6 +46,7 @@ public:
     bool IsExplorationFinished() const;
     TuningPhase GetPhase() const;
     void FinishExploration();
+    void ResumeExploration();
     void CancelRefinement();
     void SetRefinementParameters(const RefinementParameters& parameters);
 

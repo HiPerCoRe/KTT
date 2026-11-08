@@ -24,6 +24,8 @@ public:
 
     KernelConfiguration GetWinner() const;
 
+    std::vector<std::pair<KernelConfiguration, Nanoseconds>> GetRefinedResults() const;
+
     void Cancel();
 
 private:

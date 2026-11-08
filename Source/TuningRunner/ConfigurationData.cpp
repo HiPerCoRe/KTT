@@ -268,6 +268,37 @@ void ConfigurationData::FinishExploration()
     TransitionToRefinement();
 }
 
+void ConfigurationData::ResumeExploration()
+{
+    if (GetPhase() != TuningPhase::Finished || !m_ExplorationFinishedByUser)
+    {
+        Logger::LogWarning("Exploration can be resumed only after it was finished by the user.");
+        return;
+    }
+
+    std::vector<std::pair<KernelConfiguration, Nanoseconds>> refined;
+
+    if (m_Refinement != nullptr)
+    {
+        refined = m_Refinement->GetRefinedResults();
+    }
+
+    for (const auto& [congiguration, duration] : refined)
+    {
+        if (congiguration == m_RefinementWinner)
+        {
+            m_BestConfiguration = {congiguration, duration};
+        }
+    }
+
+    m_History = std::move(refined);
+    m_Refinement.reset();
+    m_RefinementWinner = KernelConfiguration();
+    m_ExplorationFinishedByUser = false;
+
+    Logger::LogInfo("Resuming exploration for kernel " + m_Kernel.GetName());
+}
+
 void ConfigurationData::CancelRefinement()
 {
     if (GetPhase() != TuningPhase::Refinement)

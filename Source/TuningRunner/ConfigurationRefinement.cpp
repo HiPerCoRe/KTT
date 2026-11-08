@@ -146,6 +146,23 @@ namespace ktt
         return m_Winner;
     }
 
+    std::vector<std::pair<KernelConfiguration, Nanoseconds>> ConfigurationRefinement::GetRefinedResults() const
+    {
+        std::vector<std::pair<KernelConfiguration, Nanoseconds>> results;
+
+        for (const auto& candidate : m_Candidates)
+        {
+            if (!candidate.active || candidate.refinementDurations.empty())
+            {
+                continue;
+            }
+
+            results.push_back({candidate.configuration, PreciseMeasurementParameters::CalculateDuration(candidate.refinementDurations, DurationCalculationMethod::Median)});
+        }
+
+        return results;
+    }
+
     void ConfigurationRefinement::Cancel()
     {
         m_Finished = true;
