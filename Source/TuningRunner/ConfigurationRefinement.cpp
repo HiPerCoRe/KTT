@@ -30,13 +30,6 @@ namespace ktt
             return false;
         }
 
-        if (history.size() < m_Parameters.minExplored)
-        {
-            Logger::LogInfo("Refinement skipped, not enough configurations");
-            m_Finished = true;
-            return false;
-        }
-
         std::vector<std::pair<KernelConfiguration, std::vector<Nanoseconds>>> grouped;
 
         for (const auto& [configuration, duration] : history)
@@ -67,6 +60,13 @@ namespace ktt
         if (uniqueHistory.size() < history.size())
         {
             Logger::LogInfo("Refinement merged " + std::to_string(history.size() - uniqueHistory.size()) + " duplicate configurations from exploration history");
+        }
+
+        if (uniqueHistory.size() < m_Parameters.minExplored)
+        {
+            Logger::LogInfo("Refinement skipped, not enough configurations");
+            m_Finished = true;
+            return false;
         }
 
         auto sortedHistory = uniqueHistory;
@@ -111,7 +111,7 @@ namespace ktt
             m_Candidates.push_back({sortedHistory[i].first, sortedHistory[i].second, {}, true});
         }
 
-        Logger::LogInfo("Beginnig refinement, Candidates: " + std::to_string(candidateCount) + ", rounds: " + std::to_string(m_Parameters.rounds) + ".");
+        Logger::LogInfo("Beginning refinement, Candidates: " + std::to_string(candidateCount) + ", rounds: " + std::to_string(m_Parameters.rounds) + ".");
         Logger::LogInfo("Refinement - Round: 1/" + std::to_string(m_Parameters.rounds) + ", Candidate: 1/" + std::to_string(m_Candidates.size()));
 
         return true;
