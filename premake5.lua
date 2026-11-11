@@ -144,6 +144,53 @@ function linkCpp()
     return true
 end
 
+-- Generates Source/ComputeEngine/Cpp/CppKernelDefines.generated.h from CppKernelDefines.h.
+-- The generated file holds the header text as a raw string that CppCompiler injects into JIT-compiled 
+-- kernels, so the injected preamble and the header are automatically synced.
+-- The generated file is not versioned.
+function generateCppKernelDefines()
+    local headerPath = _MAIN_SCRIPT_DIR .. "/Source/ComputeEngine/Cpp/CppKernelDefines.h"
+    local outputPath = _MAIN_SCRIPT_DIR .. "/Source/ComputeEngine/Cpp/CppKernelDefines.generated.h"
+
+    local header = io.open(headerPath, "r")
+    if not header then
+        error("Cannot open " .. headerPath)
+    end
+    local text = header:read("*a")
+    header:close()
+
+    if text:find(')kttdefines"', 1, true) then
+        error("CppKernelDefines.h contains the raw string delimiter kttdefines")
+    end
+
+    local content = "// Generated from CppKernelDefines.h by premake5.lua. Do not edit. Edit the source header instead.\n"
+        .. "#pragma once\n\n"
+        .. "namespace ktt\n{\n\n"
+        .. "// Full text of CppKernelDefines.h, injected as a preamble into JIT-compiled C++ kernels.\n"
+        .. 'inline constexpr char kttCppKernelDefinesSource[] = R"kttdefines('
+        .. text
+        .. ')kttdefines";\n\n'
+        .. "} // namespace ktt\n"
+
+    -- Rewrite the output only when its content would change, so repeated premake runs do not touch
+    -- the file needlessly.
+    local output = io.open(outputPath, "r")
+    if output then
+        local existing = output:read("*a")
+        output:close()
+        if existing == content then
+            return
+        end
+    end
+
+    output = io.open(outputPath, "w")
+    if not output then
+        error("Cannot write " .. outputPath)
+    end
+    output:write(content)
+    output:close()
+end
+
 -- Helper function to enable OpenMP support in a cross-platform manner
 function enableOpenMP()
     filter "system:linux or system:macosx"
@@ -450,6 +497,11 @@ project "Ktt"
     defines {"KTT_LIBRARY"}
     targetname("ktt")
     linkAllLibraries()
+
+    -- The JIT preamble for the C++ backend is derived from CppKernelDefines.h during premake
+    -- generation, so the injected text and the header can never drift. Re-run premake after
+    -- editing the header. The generated file is a build artifact.
+    generateCppKernelDefines()
 
 -- Tuning loader and launcher
 if _OPTIONS["tuning-loader"] then

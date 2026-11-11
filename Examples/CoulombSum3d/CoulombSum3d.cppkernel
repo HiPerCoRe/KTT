@@ -6,16 +6,24 @@
 
 #define DO_PRAGMA(x) _Pragma(#x)
 
-extern "C" void directCoulombSum(void** buffers, size_t* sizes) {
+// buffers[0] = atomInfo (unused in this kernel variant)
+// buffers[1] = atomInfoX, buffers[2] = atomInfoY, buffers[3] = atomInfoZ, buffers[4] = atomInfoW
+// buffers[5] = energy grid
+// scalarValues[0] = number of atoms (int)
+// scalarValues[1] = grid spacing (float)
+// scalarValues[2] = grid width (int)
+extern "C" void directCoulombSum(void** buffers, size_t* bufferSizes, ktt::ScalarType* scalarValues) {
+    (void)bufferSizes;
+
     float* atomInfoX = static_cast<float*>(buffers[1]);
     float* atomInfoY = static_cast<float*>(buffers[2]);
     float* atomInfoZ = static_cast<float*>(buffers[3]);
     float* atomInfoW = static_cast<float*>(buffers[4]);
     float* grid = static_cast<float*>(buffers[5]);
 
-    int atoms = sizes[5];
-    float gridSpacing = *reinterpret_cast<float*>(&sizes[6]);
-    int gridSize = sizes[7];
+    int atoms = scalarValues[0].i32;
+    float gridSpacing = scalarValues[1].f;
+    int gridSize = scalarValues[2].i32;
 
 #if OMP_COLLAPSE == 0
   #if OMP_SCHEDULING == 0

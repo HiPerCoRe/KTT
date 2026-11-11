@@ -20,6 +20,7 @@
 
 #include <Api/KttException.h>
 #include <ComputeEngine/Cpp/CppCompiler.h>
+#include <ComputeEngine/Cpp/CppKernelDefines.generated.h>
 #include <Utility/Logger/Logger.h>
 #include <Utility/StringUtility.h>
 
@@ -108,13 +109,27 @@ public:
             return LoadLibrary(libraryPath, kernelName);
         }
 
+        // The header for ScalarType is passed both as a header in the temp build directory and as a 
+        // preamble to the kernel file, so kernels work no matter if they include CppKernelDefines.h or not.
+        // (The potential duplication of #include and preamble is solved by the include guard #define)
+        const std::string definesSource(kttCppKernelDefinesSource);
+        const fs::path definesPath = m_TempDir / "CppKernelDefines.h";
+
+        std::ofstream definesFile(definesPath);
+        if (!definesFile)
+        {
+            throw KttException("Failed to create temporary scalar-type header: " + definesPath.string());
+        }
+        definesFile << definesSource;
+        definesFile.close();
+
         // Write source to file
         std::ofstream sourceFile(sourcePath);
         if (!sourceFile)
         {
             throw KttException("Failed to create temporary source file: " + sourcePath.string());
         }
-        sourceFile << source;
+        sourceFile << definesSource << "\n" << source;
         sourceFile.close();
 
         // Compile to a unique temporary path and atomically move it into place on success. This
@@ -131,6 +146,13 @@ public:
 
         // Compile with configured compiler
         std::string command = m_Compiler + " " + compilerOptions;
+
+        // Make CppKernelDefines.h resolvable for kernels that include it explicitly.
+#if defined(_MSC_VER)
+        command += " /I\"" + m_TempDir.string() + "\"";
+#else
+        command += " -I \"" + m_TempDir.string() + "\"";
+#endif
 
 #if defined(_MSC_VER)
         // /LD - create DLL
@@ -217,8 +239,8 @@ private:
             throw KttException("Failed to load DLL: " + std::to_string(error));
         }
 
-        // The kernel function signature: void (*)(void**, size_t*)
-        using RawFunc = void (*)(void**, size_t*);
+        // The kernel function signature: void (*)(void**, size_t*, ktt::ScalarType*)
+        using RawFunc = void (*)(void**, size_t*, ktt::ScalarType*);
         RawFunc rawFunc = reinterpret_cast<RawFunc>(GetProcAddress(handle, kernelName.c_str()));
         if (!rawFunc)
         {
@@ -232,12 +254,15 @@ private:
         // We'll capture handle in a shared_ptr to close later.
         auto handlePtr = std::shared_ptr<HMODULE>(new HMODULE(handle), [](HMODULE* h) { FreeLibrary(*h); delete h; });
 
-        return [rawFunc, handlePtr](const std::vector<void*>& buffers, const std::vector<size_t>& sizes) {
+        return [rawFunc, handlePtr](const std::vector<void*>& buffers, const std::vector<size_t>& sizes,
+            const ktt::ScalarType* scalarValues) {
             // Convert vectors to raw arrays (temporary)
-            // The kernel signature is: void (*)(void** buffers, size_t* sizes)
+            // The kernel signature is: void (*)(void** buffers, size_t* bufferSizes, ktt::ScalarType* scalarValues)
             // buffers contains pointers to vector arguments
-            // sizes contains buffer sizes followed by scalar argument values
-            rawFunc(const_cast<void**>(buffers.data()), const_cast<size_t*>(sizes.data()));
+            // bufferSizes contains the buffer sizes in bytes, in argument order
+            // scalarValues contains the scalar argument values, in argument order
+            rawFunc(const_cast<void**>(buffers.data()), const_cast<size_t*>(sizes.data()),
+                const_cast<ktt::ScalarType*>(scalarValues));
         };
 #else
         void* handle = dlopen(libraryPath.c_str(), RTLD_LAZY);
@@ -246,8 +271,8 @@ private:
             throw KttException("Failed to load shared library: " + std::string(dlerror()));
         }
 
-        // The kernel function signature: void (*)(void**, size_t*)
-        using RawFunc = void (*)(void**, size_t*);
+        // The kernel function signature: void (*)(void**, size_t*, ktt::ScalarType*)
+        using RawFunc = void (*)(void**, size_t*, ktt::ScalarType*);
         RawFunc rawFunc = reinterpret_cast<RawFunc>(dlsym(handle, kernelName.c_str()));
         if (!rawFunc)
         {
@@ -260,12 +285,15 @@ private:
         // We'll capture handle in a shared_ptr to close later.
         auto handlePtr = std::shared_ptr<void>(handle, [](void* h) { dlclose(h); });
 
-        return [rawFunc, handlePtr](const std::vector<void*>& buffers, const std::vector<size_t>& sizes) {
+        return [rawFunc, handlePtr](const std::vector<void*>& buffers, const std::vector<size_t>& sizes,
+            const ktt::ScalarType* scalarValues) {
             // Convert vectors to raw arrays (temporary)
-            // The kernel signature is: void (*)(void** buffers, size_t* sizes)
+            // The kernel signature is: void (*)(void** buffers, size_t* bufferSizes, ktt::ScalarType* scalarValues)
             // buffers contains pointers to vector arguments
-            // sizes contains buffer sizes followed by scalar argument values
-            rawFunc(const_cast<void**>(buffers.data()), const_cast<size_t*>(sizes.data()));
+            // bufferSizes contains the buffer sizes in bytes, in argument order
+            // scalarValues contains the scalar argument values, in argument order
+            rawFunc(const_cast<void**>(buffers.data()), const_cast<size_t*>(sizes.data()),
+                const_cast<ktt::ScalarType*>(scalarValues));
         };
 #endif
     }

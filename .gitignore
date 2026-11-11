@@ -8,3 +8,5 @@ premake5
 compile_commands.json
 __pycache__/
 *.pyc
+
+Source/ComputeEngine/Cpp/CppKernelDefines.generated.h 

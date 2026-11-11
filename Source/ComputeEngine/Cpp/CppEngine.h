@@ -15,6 +15,7 @@
 #include <Api/Configuration/PreciseMeasurementParameters.h>
 #include <ComputeEngine/ComputeEngine.h>
 #include <ComputeEngine/Cpp/CppCompiler.h>
+#include <ComputeEngine/Cpp/CppKernelDefines.h>
 #include <ComputeEngine/EngineConfiguration.h>
 #include <Utility/IdGenerator.h>
 #include <Utility/LruCache.h>
@@ -94,8 +95,8 @@ private:
     {
         CppCompiler::KernelFunction function;
         std::vector<void*> argumentPointers;
-        std::vector<size_t> argumentSizes;
-        std::vector<size_t> scalarValues; // Storage for scalar argument values
+        std::vector<size_t> argumentSizes; // Buffer sizes in bytes, in argument order
+        std::vector<ScalarType> scalarValues; // Scalar argument values, in argument order
         Nanoseconds compilationOverhead = 0; // Time spent compiling this kernel
     };
 
