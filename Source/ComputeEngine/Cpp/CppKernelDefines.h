@@ -6,7 +6,8 @@
 // This header defines the scalar argument type of the KTT C++ backend. KTT injects the full text
 // of this file as a preamble into every JIT-compiled C++ kernel and also emits it as a real file
 // into the JIT temporary directory (with an include path added to the kernel compile command), so
-// a kernel can use the type without any include, or include "CppKernelDefines.h" explicitly.
+// a kernel can use the type without any include, or include "ComputeEngine/Cpp/CppKernelDefines.h"
+// explicitly.
 // Kernel authors must not define their own ScalarType; the definition comes from KTT.
 //
 // NOTE for KTT developers: Source/ComputeEngine/Cpp/CppKernelDefines.generated.h is generated from

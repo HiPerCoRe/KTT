@@ -113,8 +113,11 @@ public:
         // preamble to the kernel file, so kernels work no matter if they include CppKernelDefines.h or not.
         // (The potential duplication of #include and preamble is solved by the include guard #define)
         const std::string definesSource(kttCppKernelDefinesSource);
-        const fs::path definesPath = m_TempDir / "CppKernelDefines.h";
+        // Folder structure must match the one in the KTT project.
+        const fs::path definesPath = m_TempDir / "ComputeEngine/Cpp/CppKernelDefines.h";
 
+        std::error_code ignored;
+        fs::create_directories(definesPath.parent_path(), ignored);
         std::ofstream definesFile(definesPath);
         if (!definesFile)
         {

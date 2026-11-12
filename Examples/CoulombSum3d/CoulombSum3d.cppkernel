@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <math.h>
+#include "ComputeEngine/Cpp/CppKernelDefines.h"
 
 #define STRINGIFY(x) #x
 #define EXPAND_AND_STRINGIFY(x) STRINGIFY(x)
