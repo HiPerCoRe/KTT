@@ -8,5 +8,3 @@ premake5
 compile_commands.json
 __pycache__/
 *.pyc
-.idea/
-update_db.sh
