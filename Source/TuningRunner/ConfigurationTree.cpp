@@ -1,6 +1,10 @@
+#include <functional>
+#include <stack>
+
 #include <Api/KttException.h>
 #include <TuningRunner/ConfigurationTree.h>
 #include <Utility/ErrorHandling/Assert.h>
+#include <Utility/Fingerprint/FingerprintUtility.h>
 
 namespace ktt
 {
@@ -66,7 +70,7 @@ uint64_t ConfigurationTree::GetConfigurationsCount() const
 KernelConfiguration ConfigurationTree::GetConfiguration(const uint64_t index) const
 {
     KttAssert(m_IsBuilt, "The tree must be built before submitting queries");
-    
+
     if (index >= GetConfigurationsCount())
     {
         throw KttException("Invalid configuration index");
@@ -91,6 +95,62 @@ bool ConfigurationTree::IsConfigurationValid(const KernelConfiguration& configur
     KttAssert(m_IsBuilt, "The tree must be built before submitting queries");
     const std::vector<size_t> indices = GetIndicesFromConfiguration(configuration);
     return m_Root->IsPathValid(indices);
+}
+
+size_t ConfigurationTree::GetConfigurationFingerprint() const
+{
+    if (!IsBuilt())
+    {
+        throw KttException("The tree must be built before submitting queries");
+    }
+
+    size_t result = 0;
+
+    // Each stack entry contains: (node, level)
+    std::stack<std::pair<const ConfigurationNode*, uint64_t>> stack;
+
+    if (m_Root)
+    {
+        stack.push({m_Root.get(), 0});
+    }
+
+    std::vector<const KernelParameter*> levelToParameter(GetDepth() + 1, nullptr);
+
+    for (const auto& pair : m_ParameterToLevel)
+    {
+        levelToParameter[pair.second] = pair.first;
+    }
+
+    while (!stack.empty())
+    {
+        auto [node, level] = stack.top();
+        stack.pop();
+
+        result = FingerprintUtility::HashFunction(result, level);
+        result = FingerprintUtility::HashFunction(result, node->GetIndex());
+        result = FingerprintUtility::HashFunction(result, node->GetChildrenCount());
+
+        if (level > 0)
+        {
+            KttAssert(level < levelToParameter.size(), "Invalid parameter level for node");
+            const auto *parameter = levelToParameter[level];
+            KttAssert(parameter != nullptr, "Missing kernel parameter for node level");
+            KttAssert(node->GetIndex() < parameter->GetValuesCount(), "Invalid node index for parameter values");
+
+            const std::string value = parameter->GeneratePair(node->GetIndex()).GetValueString();
+            result = FingerprintUtility::HashFunction(result, FingerprintUtility::HashString(value));
+        }
+
+        // Add all children to the stack in reverse order
+        // (to maintain consistent left-to-right traversal order)
+        const auto& children = node->GetChildren();
+        for (auto it = children.rbegin(); it != children.rend(); ++it)
+        {
+            stack.push({it->get(), level + 1});
+        }
+    }
+
+    return result;
 }
 
 void ConfigurationTree::InitializeParameterLevels(const std::vector<const KernelParameter*>& parameters)

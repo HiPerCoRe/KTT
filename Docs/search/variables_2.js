@@ -1,12 +1,11 @@
 var searchData=
 [
-  ['m_5fconstantmemorysize_0',['m_ConstantMemorySize',['../structktt_1_1_kernel_compilation_data.html#a5fd344b2104da29fb6eac41348aec33f',1,'ktt::KernelCompilationData']]],
-  ['m_5fenable_1',['m_Enable',['../structktt_1_1_enable_bitfield_operators_3_01_validation_mode_01_4.html#a817e62a8f5d838d0c141e7438b9f2b31',1,'ktt::EnableBitfieldOperators&lt; ValidationMode &gt;']]],
-  ['m_5flocalmemorysize_2',['m_LocalMemorySize',['../structktt_1_1_kernel_compilation_data.html#a61dec24dc62784540fbffd92991e4a01',1,'ktt::KernelCompilationData']]],
-  ['m_5fmaxworkgroupsize_3',['m_MaxWorkGroupSize',['../structktt_1_1_kernel_compilation_data.html#ade0a08290bacddffccd02c5ba90e1672',1,'ktt::KernelCompilationData']]],
-  ['m_5fprivatememorysize_4',['m_PrivateMemorySize',['../structktt_1_1_kernel_compilation_data.html#a69be3334882825ff4648976ab78d03f3',1,'ktt::KernelCompilationData']]],
-  ['m_5fregisterscount_5',['m_RegistersCount',['../structktt_1_1_kernel_compilation_data.html#ad1039bd16e72094dae9e9bc304cbc64e',1,'ktt::KernelCompilationData']]],
-  ['maxpowerdiff_6',['maxPowerDiff',['../structktt_1_1_precise_measurement_parameters.html#a5a39237ce78f34f2454635bb4064d2c1',1,'ktt::PreciseMeasurementParameters']]],
-  ['maxtimems_7',['maxTimeMs',['../structktt_1_1_precise_measurement_parameters.html#a03be233cb7cb6e29d7c1d52227f3acc1',1,'ktt::PreciseMeasurementParameters']]],
-  ['mintimems_8',['minTimeMs',['../structktt_1_1_precise_measurement_parameters.html#a253725332eaf76e2d923e0959fa554b0',1,'ktt::PreciseMeasurementParameters']]]
+  ['device_0',['device',['../structktt_1_1db_1_1_tuning_info.html#ad44eec921e74d9c5ac291f55bd0d27a2',1,'ktt::db::TuningInfo']]],
+  ['deviceapiid_1',['deviceApiId',['../structktt_1_1db_1_1_run.html#a72568c0cdacd8b3bb0fa4adda418ef87',1,'ktt::db::Run']]],
+  ['devicecount_2',['deviceCount',['../structktt_1_1db_1_1_source_stats.html#a9c436917c192d674042842d2b0470085',1,'ktt::db::SourceStats']]],
+  ['deviceid_3',['deviceId',['../structktt_1_1db_1_1_run.html#aa129ad24039a6f7a13f5b08b64d7fa36',1,'ktt::db::Run']]],
+  ['deviceidentifier_4',['deviceidentifier',['../structktt_1_1db_1_1_device_info.html#a5eaf23bca098fe11244a055f10a7d4f8',1,'ktt::db::DeviceInfo::deviceIdentifier'],['../structktt_1_1db_1_1_run.html#a99f1e996251dab13eb8fabe944f4f125',1,'ktt::db::Run::deviceIdentifier']]],
+  ['deviceinfo_5',['deviceinfo',['../structktt_1_1db_1_1_run_query_result.html#aab277efabe98f70c1d5711b18fb22311',1,'ktt::db::RunQueryResult::deviceInfo'],['../structktt_1_1db_1_1_run_sync_record.html#a8d27a6c5b245f4f6873b69a17043d579',1,'ktt::db::RunSyncRecord::deviceInfo']]],
+  ['duration_6',['duration',['../structktt_1_1_duration_measurement_result.html#af4a7de36e7b13fab4396b3a666835321',1,'ktt::DurationMeasurementResult::duration'],['../structktt_1_1db_1_1_raw_result.html#a8e8993de0baafc5ddf38b0b9501c1edb',1,'ktt::db::RawResult::duration']]],
+  ['durationcalculationmethod_7',['durationCalculationMethod',['../structktt_1_1_precise_measurement_parameters.html#a6eac0fa438276ef44f1f17461fc8e38e',1,'ktt::PreciseMeasurementParameters']]]
 ];

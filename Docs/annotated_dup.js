@@ -1,6 +1,33 @@
 var annotated_dup =
 [
     [ "ktt", "namespacektt.html", [
+      [ "db", "namespacektt_1_1db.html", [
+        [ "Database", "classktt_1_1db_1_1_database.html", "classktt_1_1db_1_1_database" ],
+        [ "DatabaseUtility", "classktt_1_1db_1_1_database_utility.html", "classktt_1_1db_1_1_database_utility" ],
+        [ "DbDeviceInfo", "structktt_1_1db_1_1_db_device_info.html", "structktt_1_1db_1_1_db_device_info" ],
+        [ "Device", "structktt_1_1db_1_1_device.html", "structktt_1_1db_1_1_device" ],
+        [ "DeviceApi", "structktt_1_1db_1_1_device_api.html", "structktt_1_1db_1_1_device_api" ],
+        [ "DeviceInfo", "structktt_1_1db_1_1_device_info.html", "structktt_1_1db_1_1_device_info" ],
+        [ "DeviceRepository", "classktt_1_1db_1_1_device_repository.html", "classktt_1_1db_1_1_device_repository" ],
+        [ "GetBestResultsQuery", "structktt_1_1db_1_1_get_best_results_query.html", null ],
+        [ "RawResult", "structktt_1_1db_1_1_raw_result.html", "structktt_1_1db_1_1_raw_result" ],
+        [ "ResultRepository", "classktt_1_1db_1_1_result_repository.html", "classktt_1_1db_1_1_result_repository" ],
+        [ "Run", "structktt_1_1db_1_1_run.html", "structktt_1_1db_1_1_run" ],
+        [ "RunQueryResult", "structktt_1_1db_1_1_run_query_result.html", "structktt_1_1db_1_1_run_query_result" ],
+        [ "RunRepository", "classktt_1_1db_1_1_run_repository.html", "classktt_1_1db_1_1_run_repository" ],
+        [ "RunSyncRecord", "structktt_1_1db_1_1_run_sync_record.html", "structktt_1_1db_1_1_run_sync_record" ],
+        [ "SaveOptions", "structktt_1_1db_1_1_save_options.html", "structktt_1_1db_1_1_save_options" ],
+        [ "Schema", "classktt_1_1db_1_1_schema.html", "classktt_1_1db_1_1_schema" ],
+        [ "Source", "structktt_1_1db_1_1_source.html", "structktt_1_1db_1_1_source" ],
+        [ "SourceRepository", "classktt_1_1db_1_1_source_repository.html", "classktt_1_1db_1_1_source_repository" ],
+        [ "SourceStats", "structktt_1_1db_1_1_source_stats.html", "structktt_1_1db_1_1_source_stats" ],
+        [ "Space", "structktt_1_1db_1_1_space.html", "structktt_1_1db_1_1_space" ],
+        [ "SpaceRepository", "classktt_1_1db_1_1_space_repository.html", "classktt_1_1db_1_1_space_repository" ],
+        [ "TransactionGuard", "classktt_1_1db_1_1_transaction_guard.html", "classktt_1_1db_1_1_transaction_guard" ],
+        [ "TuningInfo", "structktt_1_1db_1_1_tuning_info.html", "structktt_1_1db_1_1_tuning_info" ],
+        [ "TuningSpaceInfo", "structktt_1_1db_1_1_tuning_space_info.html", "structktt_1_1db_1_1_tuning_space_info" ],
+        [ "UuidGenerator", "classktt_1_1db_1_1_uuid_generator.html", null ]
+      ] ],
       [ "BufferOutputDescriptor", "classktt_1_1_buffer_output_descriptor.html", "classktt_1_1_buffer_output_descriptor" ],
       [ "ComputationResult", "classktt_1_1_computation_result.html", "classktt_1_1_computation_result" ],
       [ "ComputeApiInitializer", "classktt_1_1_compute_api_initializer.html", "classktt_1_1_compute_api_initializer" ],

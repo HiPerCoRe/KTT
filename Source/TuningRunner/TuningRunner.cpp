@@ -246,6 +246,17 @@ KernelConfiguration TuningRunner::GetBestConfiguration(const KernelId id) const
     return m_ConfigurationManager->GetBestConfiguration(id);
 }
 
+size_t TuningRunner::GetConfigurationFingerprint(const Kernel& kernel) const
+{
+    const auto id = kernel.GetId();
+    if (!m_ConfigurationManager->HasData(id))
+    {
+        m_ConfigurationManager->InitializeData(kernel);
+    }
+
+    return m_ConfigurationManager->GetConfigurationFingerprint(id);
+}
+
 const KernelResult& TuningRunner::FindMatchingResult(const std::vector<KernelResult>& results,
     const KernelConfiguration& configuration)
 {
