@@ -13,15 +13,15 @@ enum class OutputFormat
 {
     /** Tuner output has JSON format.
       */
-    JSON,
+    JSON = 1,
     
     /** Tuner output in JSON format compatible with other autotuning tools.
       */
-    JSON_T4,
+    JSON_T4 = 2,
 
     /** Tuner output has XML format.
       */
-    XML
+    XML = 3
 };
 
 } // namespace ktt

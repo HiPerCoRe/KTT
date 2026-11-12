@@ -899,7 +899,16 @@ INPUT                  = Readme.md \
                          Source/Output/TimeConfiguration/TimeUnit.h \
                          Source/Output/OutputFormat.h \
                          Source/Utility/Logger/LoggingLevel.h \
-                         Source/Kernel/ParameterValueType.h
+                         Source/Kernel/ParameterValueType.h \
+                         Database/Database \
+                         Database/Database/Repository \
+                         Database/Database/Repository/Device \
+                         Database/Database/Repository/Result \
+                         Database/Database/Repository/Run \
+                         Database/Database/Repository/Source \
+                         Database/Database/Repository/Space \
+                         Database/Database/Schema \
+                         Database/Database/Utility
 
 # This tag can be used to specify the character encoding of the source files
 # that doxygen parses. Internally doxygen uses the UTF-8 encoding. Doxygen uses
