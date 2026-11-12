@@ -38,6 +38,7 @@
 #include <Api/Configuration/KernelConfiguration.h>
 #include <Api/Info/DeviceInfo.h>
 #include <Api/Info/PlatformInfo.h>
+#include <Api/Info/DatabaseTuningInfo.h>
 #include <Api/Output/BufferOutputDescriptor.h>
 #include <Api/Output/KernelResult.h>
 
@@ -547,6 +548,15 @@ public:
       */
     ArgumentId AddArgumentScalar(const void* data, const size_t dataSize, const ArgumentId& customId = "");
 
+    /** @fn void UpdateScalarArgument(const ArgumentId& id, const void* data)
+      * Updates the data of the specified scalar argument. Only the data stored by the tuner are changed, nothing is transferred
+      * to the device. Every following run of a kernel that uses the argument therefore uses the new data. This differs from
+      * ComputeInterface::UpdateScalarArgument(), which updates the scalar argument only under the currently launched kernel.
+      * @param id Id of scalar argument which will be updated.
+      * @param data Pointer to new data for scalar argument. The data must have matching kernel argument data type.
+      */
+    void UpdateScalarArgument(const ArgumentId& id, const void* data);
+
     /** @fn template <typename T> ArgumentId AddArgumentLocal(const size_t localMemorySize, const ArgumentId& customId = "")
       * Adds new local memory (shared memory in CUDA) argument to the tuner. All local memory arguments are read-only and cannot be
       * initialized from host memory. In case of CUDA API usage, local memory arguments cannot be directly set as kernel function
@@ -594,6 +604,46 @@ public:
       * @param flag If true, write-only argument zeroing is enabled. It is disabled otherwise.
       */
     void SetWriteOnlyArgumentZero(const bool flag);
+
+    /** @fn void UpdateBuffer(const ArgumentId& id)
+      * Updates data in the compute buffer of a specified vector argument. Same behavior as ComputeInterface::UpdateBuffer():
+      * If the compute buffer of the argument does not exist yet, it is created and the data are uploaded into it.
+      * If the buffer already exists, its content is replaced without any allocations.
+      * Except: duration of this call is not counted towards kernel's total duration (as it would be in the ComputeInterface 
+      * call) or data movement overhead (as it would be with framework-managed buffers).
+      * @param id Id of vector argument which will be uploaded. The argument's management type should be User, not Framework,
+      * to avoid duplicate work and possible inconsistencies.
+      * @param dataPtr Pointer to the raw data in host memory. If dataPtr is nullptr, the data are taken from 
+      * the argument, which means either a copy managed by KTT, or a reference back to user data 
+      * (see argument referenceUserData of Tuner::AddArgumentVector).
+      * @param dataSize Size in bytes of buffer portion which will be uploaded from the specified source, starting with the first
+      * byte. If zero, the entire buffer will be uploaded.
+      */
+    void UpdateBuffer(const ArgumentId& id, const void *dataPtr = nullptr, const size_t dataSize = 0);
+
+    /** @fn void DownloadBuffer(const ArgumentId& id, void* destination, const size_t dataSize = 0)
+      * Downloads the specified vector argument from its compute buffer. The transfer is submitted to the default queue and the
+      * method returns after it is finished. The compute buffer of the argument must already exist, which is the case after the
+      * argument has been uploaded to the device for the first time (e.g., by a previous call to Run() or TuneIteration() or
+      * UpdateBuffer()).
+      * Note that duration of this call is not counted towards kernel's total duration (as it would be in the ComputeInterface 
+      * call) or data movement overhead (as it would be with framework-managed buffers).
+      * @param id Id of vector argument which will be downloaded.
+      * @param destination Buffer where the argument data will be downloaded. Its size must be equal or greater than the specified
+      * data size.
+      * @param dataSize Size in bytes of buffer portion which will be downloaded to specified destination, starting with the first
+      * byte. If zero, the entire buffer will be downloaded.
+      */
+    void DownloadBuffer(const ArgumentId& id, void* destination, const size_t dataSize = 0);
+
+    /** @fn void ClearBuffer(const ArgumentId& id) = 0
+      * Removes compute buffer for the specified vector argument. This method should be used mainly with arguments with
+      * ::ArgumentManagementType set to User.
+      * Note that duration of this call is not counted towards kernel's total duration (as it would be in the ComputeInterface 
+      * call) or data movement overhead (as it would be with framework-managed buffers).
+      * @param id Id of vector argument whose buffer will be removed.
+      */
+    void ClearBuffer(const ArgumentId& id);
 
     /** @fn KernelResult Run(const KernelId id, const KernelConfiguration& configuration,
       * const std::vector<BufferOutputDescriptor>& output)
@@ -979,6 +1029,20 @@ public:
       * @return Kernel definition source with preprocessor definitions for the specified kernel based on provided configuration.
       */
     std::string GetKernelDefinitionSource(const KernelDefinitionId id, const KernelConfiguration& configuration) const;
+
+    /** @fn ktt::db::TuningInfo GetDatabaseTuningInfo(const KernelId id) const
+      * Collects the information about a kernel and the current device that is needed to save or query its tuning
+      * results in the KTT database. Computes the fingerprints identifying the kernel's tuning space (kernel source,
+      * tuning parameters and the whole configuration space) and captures the properties of the currently active
+      * device (name, type, vendor, compute API and API-specific details such as OpenCL/Vulkan extensions or CUDA
+      * compute capability). The returned value is the descriptor passed to the ktt::db::Database methods, e.g.
+      * SaveResults, SimpleGetBestResults or GetBestResults. The inputData field is left empty and may be filled in
+      * by the caller before saving.
+      * @param id Id of kernel for which the tuning information is collected.
+      * @return TuningInfo holding the tuning space fingerprints and current device info for the specified kernel.
+      * See ktt::db::TuningInfo for more information.
+      */
+    ktt::db::TuningInfo GetDatabaseTuningInfo(const KernelId id) const;
 
     /** @fn static void SetTimeUnit(const TimeUnit unit)
       * Sets time unit used for printing of results. Default time unit is milliseconds.

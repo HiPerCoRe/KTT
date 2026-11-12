@@ -42,6 +42,7 @@ public:
     bool IsProcessed() const;
     KernelConfiguration GetCurrentConfiguration() const;
     KernelConfiguration GetBestConfiguration() const;
+    size_t GetConfigurationFingerprint() const;
 
     bool IsExplorationFinished() const;
     TuningPhase GetPhase() const;

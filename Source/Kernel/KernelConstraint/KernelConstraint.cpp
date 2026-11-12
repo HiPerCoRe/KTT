@@ -4,8 +4,9 @@
 namespace ktt
 {
 
-KernelConstraint::KernelConstraint(const std::vector<const KernelParameter*>& parameters) :
-    m_Parameters(parameters)
+KernelConstraint::KernelConstraint(const std::vector<const KernelParameter*>& parameters, const int order) :
+    m_Parameters(parameters),
+    m_Order(order)
 {
     for (const auto* parameter : parameters)
     {
@@ -16,6 +17,11 @@ KernelConstraint::KernelConstraint(const std::vector<const KernelParameter*>& pa
 const std::vector<const KernelParameter*>& KernelConstraint::GetParameters() const
 {
     return m_Parameters;
+}
+
+int KernelConstraint::GetOrder() const
+{
+    return m_Order;
 }
 
 bool KernelConstraint::AffectsParameter(const std::string& name) const

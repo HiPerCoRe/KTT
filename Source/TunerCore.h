@@ -5,6 +5,7 @@
 #include <string>
 
 #include <Api/ComputeApiInitializer.h>
+#include <Api/Info/DatabaseTuningInfo.h>
 #include <ComputeEngine/ComputeApi.h>
 #include <ComputeEngine/ComputeEngine.h>
 #include <Kernel/KernelManager.h>
@@ -73,6 +74,7 @@ public:
         const ArgumentId& customId = "");
     void RemoveArgument(const ArgumentId& id);
     void SaveArgument(const ArgumentId& id, const std::string& file) const;
+    void UpdateScalarArgument(const ArgumentId& id, const void* data);
     void SetReadOnlyArgumentCache(const bool flag);
     void SetWriteOnlyArgumentZero(const bool flag);
 
@@ -114,6 +116,7 @@ public:
     std::string GetKernelSource(const KernelId id, const KernelConfiguration& configuration) const;
     std::string GetKernelDefinitionSource(const KernelDefinitionId id, const KernelConfiguration& configuration) const;
     KernelResult GetBestResult(const std::vector<KernelResult>& results) const;
+    ktt::db::TuningInfo GetDatabaseTuningInfo(const KernelId id) const;
 
     // Result printing
     static void SetTimeUnit(const TimeUnit unit);
@@ -126,6 +129,9 @@ public:
     void RemoveComputeQueue(const QueueId id);
     void WaitForComputeAction(const ComputeActionId id);
     void WaitForTransferAction(const TransferActionId id);
+    void UpdateBuffer(const ArgumentId& id, const void *dataPtr, size_t dataSize);
+    void DownloadBuffer(const ArgumentId& id, void* destination, const size_t dataSize = 0);
+    void ClearBuffer(const ArgumentId& id);
     void SynchronizeQueue(const QueueId queueId);
     void SynchronizeQueues();
     void SynchronizeDevice();

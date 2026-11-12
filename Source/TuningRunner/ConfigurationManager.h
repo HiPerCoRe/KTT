@@ -40,6 +40,7 @@ public:
     KernelConfiguration GetCurrentConfiguration(const KernelId id) const;
     KernelConfiguration GetBestConfiguration(const KernelId id) const;
     TuningPhase GetTuningPhase(const KernelId id) const;
+    size_t GetConfigurationFingerprint(const KernelId id) const;
 
 private:
     std::map<KernelId, std::unique_ptr<Searcher>> m_Searchers;
