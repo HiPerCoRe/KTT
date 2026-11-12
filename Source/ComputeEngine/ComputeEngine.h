@@ -9,6 +9,7 @@
 #include <Api/Info/PlatformInfo.h>
 #include <Api/Output/ComputationResult.h>
 #include <ComputeEngine/ComputeApi.h>
+#include <ComputeEngine/EngineConfiguration.h>
 #include <ComputeEngine/KernelComputeData.h>
 #include <ComputeEngine/GlobalSizeType.h>
 #include <ComputeEngine/TransferResult.h>
@@ -43,9 +44,8 @@ public:
     virtual void SetProfiling(const bool profiling) = 0;
 
     // Buffer methods
-    virtual TransferActionId UploadArgument(KernelArgument& kernelArgument, const QueueId queueId) = 0;
-    virtual TransferActionId UpdateArgument(const ArgumentId& id, const QueueId queueId, const void* data,
-        const size_t dataSize) = 0;
+    virtual TransferActionId UpdateArgument(KernelArgument& kernelArgument, const QueueId queueId, const void* data = nullptr,
+        const size_t dataSize = 0) = 0;
     virtual TransferActionId DownloadArgument(const ArgumentId& id, const QueueId queueId, void* destination,
         const size_t dataSize) = 0;
     virtual TransferActionId CopyArgument(const ArgumentId& destination, const QueueId queueId, const ArgumentId& source,
@@ -57,6 +57,7 @@ public:
     virtual void ClearBuffer(const ArgumentId& id) = 0;
     virtual void ClearBuffers() = 0;
     virtual bool HasBuffer(const ArgumentId& id) = 0;
+    virtual void ZeroBuffer(const ArgumentId& id, const QueueId queueId) = 0;
 
     // Queue methods
     virtual QueueId AddComputeQueue(ComputeQueue queue) = 0;
@@ -77,6 +78,8 @@ public:
 
     // Utility methods
     virtual void SetCompilerOptions(const std::string& options, const bool overrideDefault = false) = 0;
+    virtual std::string GetCompilerOptions();
+    virtual void AddCompilerOptions(const std::string& options);
     virtual void SetGlobalSizeType(const GlobalSizeType type) = 0;
     virtual void SetAutomaticGlobalSizeCorrection(const bool flag) = 0;
     virtual void SetKernelCacheCapacity(const uint64_t capacity) = 0;
@@ -86,6 +89,11 @@ public:
 
     // Sanitizing processor to isolate measurements (L2 cache flushing etc.)
     virtual void Sanitize(const QueueId /*queueId*/) {}
+
+protected:
+    explicit ComputeEngine(ktt::GlobalSizeType globalSizeType);
+
+    EngineConfiguration m_Configuration;
 };
 
 } // namespace ktt

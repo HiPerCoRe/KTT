@@ -1,5 +1,5 @@
-#include <chrono>
 #include <limits>
+#include <random>
 #include <string>
 
 #include <Api/Searcher/McmcSearcher.h>
@@ -17,7 +17,20 @@ McmcSearcher::McmcSearcher(const KernelConfiguration& start) :
     m_Boot(0),
     m_BestTime(std::numeric_limits<double>::max()),
     m_Start(start),
-    m_Generator(static_cast<unsigned int>(std::chrono::system_clock::now().time_since_epoch().count())),
+    m_Generator(std::random_device{}()),
+    m_ProbabilityDistribution(0.0, 1.0)
+{}
+
+McmcSearcher::McmcSearcher(const KernelConfiguration& start, const uint64_t seed) :
+    Searcher(seed),
+    m_Index(0),
+    m_VisitedStatesCount(0),
+    m_OriginState(0),
+    m_CurrentState(0),
+    m_Boot(0),
+    m_BestTime(std::numeric_limits<double>::max()),
+    m_Start(start),
+    m_Generator(std::random_device{}()),
     m_ProbabilityDistribution(0.0, 1.0)
 {}
 
@@ -43,6 +56,11 @@ void McmcSearcher::OnInitialize()
     m_OriginState = initialState;
     m_CurrentState = initialState;
     m_Index = initialState;
+}
+
+void McmcSearcher::OnSeed(const uint64_t seed)
+{
+    m_Generator.seed(static_cast<std::default_random_engine::result_type>(seed));
 }
 
 void McmcSearcher::OnReset()

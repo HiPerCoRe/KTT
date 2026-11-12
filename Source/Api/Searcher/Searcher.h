@@ -4,6 +4,7 @@
 #pragma once
 
 #include <cstdint>
+#include <optional>
 #include <set>
 #include <vector>
 
@@ -40,6 +41,14 @@ public:
       */
     virtual void OnReset();
 
+    /** @fn virtual void OnSeed(const uint64_t seed)
+      * Called before OnInitialize() whenever a seed was assigned to the searcher through its constructor or the SetSeed
+      * method. Searchers which own a random number generator should seed it here, so that the generator is reinitialized
+      * every time the configuration space is (re)generated. The default implementation does nothing.
+      * @param seed Seed assigned to the searcher.
+      */
+    virtual void OnSeed(const uint64_t seed);
+
     /** @fn virtual bool CalculateNextConfiguration(const KernelResult& previousResult) = 0
       * Calculates the configuration which will be run next. Called after processing the current configuration if there are any
       * remaining unexplored configurations.
@@ -57,9 +66,49 @@ public:
     virtual KernelConfiguration GetCurrentConfiguration() const = 0;
 
     /** @fn Searcher()
-      * Default searcher constructor. Should be called from inheriting searcher's constructor.
+      * Default searcher constructor. Should be called from inheriting searcher's constructor. Searcher created this way
+      * uses a randomly initialized source of randomness, so repeated tuning runs explore configurations in a different
+      * order.
       */
     Searcher();
+
+    /** @fn explicit Searcher(const uint64_t seed)
+      * Searcher constructor which assigns a seed to the searcher. Should be called from inheriting searcher's constructor.
+      * See SetSeed() method for details about the effect of the seed.
+      * @param seed Seed for the source of randomness used by the searcher.
+      */
+    explicit Searcher(const uint64_t seed);
+
+    /** @fn void SetSeed(const uint64_t seed)
+      * Assigns a seed to the searcher. The seed initializes both the random number generator used by the framework to
+      * pick random configurations (see GetRandomConfiguration method) and the generator owned by the searcher itself, if
+      * it has one. The generators are seeded every time the configuration space is generated for the corresponding
+      * kernel, so a searcher with a seed assigned draws the same sequence of random numbers in every tuning run.
+      *
+      * Note that a seeded sequence of random numbers does not imply a fully deterministic tuning process. Determinism is
+      * guaranteed only for RandomSearcher and for searchers whose decisions do not depend on measured kernel durations,
+      * and for any searcher during simulated tuning (see Tuner::SimulateTuning method), where kernel durations are
+      * replayed from previously collected results. McmcSearcher and ProfileBasedSearcher select configurations based on
+      * durations measured during tuning, which fluctuate between runs, so these searchers may explore different
+      * configurations in different runs even when the seed is set.
+      *
+      * The seed must be assigned before the configuration space is generated for the corresponding kernel, i.e., before
+      * the first tuning method is called or before Tuner::InitializeConfigurationData method is called.
+      * @param seed Seed for the source of randomness used by the searcher.
+      */
+    void SetSeed(const uint64_t seed);
+
+    /** @fn bool HasSeed() const
+      * Returns whether a seed was assigned to the searcher.
+      * @return True if a seed was assigned, false otherwise.
+      */
+    bool HasSeed() const;
+
+    /** @fn uint64_t GetSeed() const
+      * Returns the seed assigned to the searcher. Can only be called when HasSeed() method returns true.
+      * @return Seed assigned to the searcher.
+      */
+    uint64_t GetSeed() const;
 
     /** @fn KernelConfiguration GetConfiguration(const uint64_t index) const
       * Returns configuration with the specified index.
@@ -133,6 +182,7 @@ public:
 
 private:
     const ConfigurationData* m_Data;
+    std::optional<uint64_t> m_Seed;
 };
 
 } // namespace ktt

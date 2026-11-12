@@ -2,7 +2,10 @@
 
 #include <algorithm>
 #include <cmath>
+#include <iostream>
+#include <map>
 #include <numeric>
+#include <set>
 
 #include <Api/KttException.h>
 #include <ComputeEngine/Cuda/Buffers/CudaDeviceBuffer.h>
@@ -24,10 +27,6 @@
 #include <ComputeEngine/Cuda/Cupti/CuptiPass.h>
 #endif // KTT_PROFILING_CUPTI
 
-#ifdef KTT_POWER_USAGE_NVML
-#include <ComputeEngine/Cuda/Nvml/NvmlPowerSubscription.h>
-#endif // KTT_POWER_USAGE_NVML
-
 #include <iostream>
 
 
@@ -35,7 +34,7 @@ namespace ktt
 {
 
 CudaEngine::CudaEngine(const DeviceIndex deviceIndex, const uint32_t queueCount) :
-    m_Configuration(GlobalSizeType::CUDA),
+    ComputeEngine(GlobalSizeType::CUDA),
     m_DeviceIndex(deviceIndex),
     m_DeviceInfo(0, ""),
     m_KernelCache(10),
@@ -89,7 +88,7 @@ CudaEngine::CudaEngine(const DeviceIndex deviceIndex, const uint32_t queueCount)
 }
 
 CudaEngine::CudaEngine(const ComputeApiInitializer& initializer, std::vector<QueueId>& assignedQueueIds) :
-    m_Configuration(GlobalSizeType::CUDA),
+    ComputeEngine(GlobalSizeType::CUDA),
     m_DeviceIndex(0),
     m_DeviceInfo(0, ""),
     m_KernelCache(10),
@@ -173,6 +172,23 @@ void CudaEngine::Sanitize(const QueueId queueId)
     CheckError(cuStreamSynchronize(stream.GetStream()), "cuStreamSynchronize");
 }
 
+void CudaEngine::ZeroBuffer(const ArgumentId& id, const QueueId queueId)
+{
+    if (!ContainsKey(m_Buffers, id))
+    {
+        throw KttException("Buffer for argument with id " + id + " was not found");
+    }
+    if (!ContainsKey(m_Streams, queueId))
+    {
+        throw KttException("Invalid queue index: " + std::to_string(queueId));
+    }
+
+    auto& buffer = *m_Buffers[id];
+    CudaStream& stream = *m_Streams[queueId];
+    CheckError(cuMemsetD8Async(*buffer.GetBuffer(), 0, buffer.GetSize(), stream.GetStream()), "cuMemsetD8Async");
+    CheckError(cuStreamSynchronize(stream.GetStream()), "cuStreamSynchronize");
+}
+
 ComputeActionId CudaEngine::RunKernelAsync(const KernelComputeData& data, const QueueId queueId, const bool powerMeasurementAllowed,
     const std::optional<PreciseMeasurementParameters>& preciseParams)
 {
@@ -217,24 +233,24 @@ ComputeActionId CudaEngine::RunKernelAsync(const KernelComputeData& data, const 
     timer.Stop();
 
 #if defined(KTT_POWER_USAGE_NVML)
-    // Power measurement is available - use full functionality
-    std::unique_ptr<NvmlPowerSubscription> subscription;
+    // Power measurement is available - use full functionality.
+    // NVML provides all readings; the background sampling thread is bracketed around each
+    // kernel launch via explicit StartCollection()/EndCollection() calls (no CUPTI needed).
     std::vector<uint32_t> sumPwr;
     std::vector<double> sumTemp;
     std::vector<uint32_t> sumSMFreq;
     std::vector<uint32_t> sumMemFreq;
     std::vector<int32_t> sumFanSpeed;
-    if (powerMeasurementAllowed) {
-        subscription = std::make_unique<NvmlPowerSubscription>(*m_PowerManager);
-        //uint64_t energyBegin = m_PowerManager->GetTotalDeviceEnergy();
-    }
     // Robust power measurement timer - only used when preciseParams is provided
     Timer pwrTimer;
     if (powerMeasurementAllowed && preciseParams.has_value())
     {
         pwrTimer.Start();
     }
-    
+
+    if (powerMeasurementAllowed) {
+        m_PowerManager->StartCollection();
+    }
     auto action = kernel->Launch(stream, data.GetGlobalSize(), data.GetLocalSize(), arguments, sharedMemorySize);
     // Track number of iterations for power measurement (default: 1 for simple measurement)
     int consideredIters = 1;
@@ -243,6 +259,9 @@ ComputeActionId CudaEngine::RunKernelAsync(const KernelComputeData& data, const 
     if (powerMeasurementAllowed && preciseParams.has_value())
     {
         action->WaitForFinish();
+        m_PowerManager->EndCollection();
+        // Average only the samples taken while the kernel was actually executing on the GPU.
+        m_PowerManager->RestrictToExecutionWindow(action->GetDuration());
         std::vector<ktt::Nanoseconds> durationSamples;
         durationSamples.push_back(action->GetDuration());
         consideredIters = 0;
@@ -258,8 +277,11 @@ ComputeActionId CudaEngine::RunKernelAsync(const KernelComputeData& data, const 
         sumFanSpeed.push_back(m_PowerManager->GetFanSpeed());
         
         while (looping) {
+            m_PowerManager->StartCollection();
             auto a = kernel->Launch(stream, data.GetGlobalSize(), data.GetLocalSize(), arguments, sharedMemorySize);
             a->WaitForFinish();
+            m_PowerManager->EndCollection();
+            m_PowerManager->RestrictToExecutionWindow(a->GetDuration());
             durationSamples.push_back(a->GetDuration());
             sumPwr.push_back(m_PowerManager->GetPowerUsage());
             sumTemp.push_back(m_PowerManager->GetTemperature());
@@ -314,6 +336,8 @@ ComputeActionId CudaEngine::RunKernelAsync(const KernelComputeData& data, const 
         if (!preciseParams.has_value())
         {
             action->WaitForFinish();
+            m_PowerManager->EndCollection();
+            m_PowerManager->RestrictToExecutionWindow(action->GetDuration());
             sumPwr.push_back(m_PowerManager->GetPowerUsage());
             sumTemp.push_back(m_PowerManager->GetTemperature());
             sumSMFreq.push_back(m_PowerManager->GetSMFrequency());
@@ -504,7 +528,7 @@ ComputationResult CudaEngine::RunKernelWithProfiling([[maybe_unused]] const Kern
     return result;
 
 #else
-    throw KttException("Support for kernel profiling is not included in this version of KTT framework");
+    throw KttException("Kernel profiling requires KTT to be built with a profiling library. See 'premake5 --help', specifically the '--profiling=<lib>' option.");
 #endif // KTT_PROFILING_CUPTI_LEGACY || KTT_PROFILING_CUPTI
 }
 
@@ -515,7 +539,7 @@ void CudaEngine::SetProfilingCounters([[maybe_unused]] const std::vector<std::st
 #elif KTT_PROFILING_CUPTI
     m_MetricInterface->SetMetrics(counters);
 #else
-    throw KttException("Support for kernel profiling is not included in this version of KTT framework");
+    throw KttException("Kernel profiling requires KTT to be built with a profiling library. See 'premake5 --help', specifically the '--profiling=<lib>' option.");
 #endif // KTT_PROFILING_CUPTI_LEGACY
 }
 
@@ -524,7 +548,7 @@ bool CudaEngine::IsProfilingSessionActive([[maybe_unused]] const KernelComputeId
 #if defined(KTT_PROFILING_CUPTI_LEGACY) || defined(KTT_PROFILING_CUPTI)
     return ContainsKey(m_CuptiInstances, id);
 #else
-    throw KttException("Support for kernel profiling is not included in this version of KTT framework");
+    throw KttException("Kernel profiling requires KTT to be built with a profiling library. See 'premake5 --help', specifically the '--profiling=<lib>' option.");
 #endif // KTT_PROFILING_CUPTI_LEGACY || KTT_PROFILING_CUPTI
 }
 
@@ -557,7 +581,7 @@ uint64_t CudaEngine::GetRemainingProfilingRuns([[maybe_unused]] const KernelComp
     return m_CuptiInstances[id]->GetRemainingPassCount();
 
 #else
-    throw KttException("Support for kernel profiling is not included in this version of KTT framework");
+    throw KttException("Kernel profiling requires KTT to be built with a profiling library. See 'premake5 --help', specifically the '--profiling=<lib>' option.");
 #endif // KTT_PROFILING_CUPTI_LEGACY || KTT_PROFILING_CUPTI
 }
 
@@ -568,7 +592,7 @@ bool CudaEngine::HasAccurateRemainingProfilingRuns() const
 #elif KTT_PROFILING_CUPTI
     return false;
 #else
-    throw KttException("Support for kernel profiling is not included in this version of KTT framework");
+    throw KttException("Kernel profiling requires KTT to be built with a profiling library. See 'premake5 --help', specifically the '--profiling=<lib>' option.");
 #endif // KTT_PROFILING_CUPTI_LEGACY
 }
 
@@ -579,7 +603,7 @@ bool CudaEngine::SupportsMultiInstanceProfiling() const
 #elif KTT_PROFILING_CUPTI
     return false;
 #else
-    throw KttException("Support for kernel profiling is not included in this version of KTT framework");
+    throw KttException("Kernel profiling requires KTT to be built with a profiling library. See 'premake5 --help', specifically the '--profiling=<lib>' option.");
 #endif // KTT_PROFILING_CUPTI_LEGACY
 }
 
@@ -593,48 +617,13 @@ void CudaEngine::SetProfiling(const bool profiling)
     m_Configuration.SetProfiling(profiling);
 }
 
-TransferActionId CudaEngine::UploadArgument(KernelArgument& kernelArgument, const QueueId queueId)
-{
-    Timer timer;
-    timer.Start();
-
-    const auto id = kernelArgument.GetId();
-    Logger::LogDebug("Uploading buffer for argument with id " + id);
-
-    if (!ContainsKey(m_Streams, queueId))
-    {
-        throw KttException("Invalid stream index: " + std::to_string(queueId));
-    }
-
-    if (ContainsKey(m_Buffers, id))
-    {
-        throw KttException("Buffer for argument with id " + id + " already exists");
-    }
-
-    if (kernelArgument.GetMemoryType() != ArgumentMemoryType::Vector)
-    {
-        throw KttException("Argument with id " + id + " is not a vector and cannot be uploaded into buffer");
-    }
-
-    auto buffer = CreateBuffer(kernelArgument);
-    timer.Stop();
-
-    auto action = buffer->UploadData(*m_Streams[queueId], kernelArgument.GetData(), kernelArgument.GetDataSize());
-    action->IncreaseOverhead(timer.GetElapsedTime());
-    const auto actionId = action->GetId();
-
-    m_Buffers[id] = std::move(buffer);
-    m_TransferActions[actionId] = std::move(action);
-
-    return actionId;
-}
-
-TransferActionId CudaEngine::UpdateArgument(const ArgumentId& id, const QueueId queueId, const void* data,
+TransferActionId CudaEngine::UpdateArgument(KernelArgument& kernelArgument, const QueueId queueId, const void* data,
     const size_t dataSize)
 {
     Timer timer;
     timer.Start();
 
+    const auto id = kernelArgument.GetId();
     Logger::LogDebug("Updating buffer for argument with id " + id);
 
     if (!ContainsKey(m_Streams, queueId))
@@ -642,12 +631,26 @@ TransferActionId CudaEngine::UpdateArgument(const ArgumentId& id, const QueueId 
         throw KttException("Invalid stream index: " + std::to_string(queueId));
     }
 
+    if (kernelArgument.GetMemoryType() != ArgumentMemoryType::Vector)
+    {
+        throw KttException("Argument with id " + id + " is not a vector, UpdateArgument only handles the vector memory type.");
+    }
+
     if (!ContainsKey(m_Buffers, id))
     {
-        throw KttException("Buffer for argument with id " + id + " was not found");
+        Logger::LogDebug("Buffer for argument with id " + id + " was not found, creating new one");
+        auto buffer = CreateBuffer(kernelArgument);
+
+        m_Buffers[id] = std::move(buffer);
     }
 
     auto& buffer = *m_Buffers[id];
+    const void* actualData = data;
+    if (actualData == nullptr)
+    {
+        Logger::LogDebug("Data pointer is null, uploading data saved in the kernel argument with id " + id);
+        actualData = kernelArgument.GetData();
+    }
     size_t actualDataSize = dataSize;
 
     if (actualDataSize == 0)
@@ -657,7 +660,7 @@ TransferActionId CudaEngine::UpdateArgument(const ArgumentId& id, const QueueId 
 
     timer.Stop();
 
-    auto action = buffer.UploadData(*m_Streams[queueId], data, actualDataSize);
+    auto action = buffer.UploadData(*m_Streams[queueId], actualData, actualDataSize);
     action->IncreaseOverhead(timer.GetElapsedTime());
     const auto actionId = action->GetId();
     m_TransferActions[actionId] = std::move(action);
@@ -951,7 +954,7 @@ void CudaEngine::SetCompilerOptions(const std::string& options, const bool overr
             finalOptions += " ";
         }
 
-        finalOptions += GetDefaultCompilerOptions();
+        finalOptions = GetDefaultCompilerOptions() + " " + finalOptions;
     }
 
     m_Configuration.SetStaticCompilerOptions(finalOptions);

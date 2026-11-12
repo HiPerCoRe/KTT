@@ -475,6 +475,32 @@ void InitializePythonTuner(py::module_& module)
         )
         .def("RemoveArgument", &ktt::Tuner::RemoveArgument)
         .def("SetReadOnlyArgumentCache", &ktt::Tuner::SetReadOnlyArgumentCache)
+        .def("UpdateScalarArgumentChar", [](ktt::Tuner& tuner, const ktt::ArgumentId& id, const int8_t data) { tuner.UpdateScalarArgument(id, &data); })
+        .def("UpdateScalarArgumentShort", [](ktt::Tuner& tuner, const ktt::ArgumentId& id, const int16_t data) { tuner.UpdateScalarArgument(id, &data); })
+        .def("UpdateScalarArgumentInt", [](ktt::Tuner& tuner, const ktt::ArgumentId& id, const int32_t data) { tuner.UpdateScalarArgument(id, &data); })
+        .def("UpdateScalarArgumentLong", [](ktt::Tuner& tuner, const ktt::ArgumentId& id, const int64_t data) { tuner.UpdateScalarArgument(id, &data); })
+        .def("UpdateScalarArgumentFloat", [](ktt::Tuner& tuner, const ktt::ArgumentId& id, const float data) { tuner.UpdateScalarArgument(id, &data); })
+        .def("UpdateScalarArgumentDouble", [](ktt::Tuner& tuner, const ktt::ArgumentId& id, const double data) { tuner.UpdateScalarArgument(id, &data); })
+        .def
+        (
+            "UpdateBuffer",
+            &ktt::Tuner::UpdateBuffer,
+            py::arg("id"),
+            py::arg("data") = py::none(),
+            py::arg("dataSize") = 0
+        )
+        .def
+        (
+            "DownloadBuffer",
+            &ktt::Tuner::DownloadBuffer,
+            py::arg("id"),
+            py::arg("destination"),
+            py::arg("dataSize") = 0
+        )
+        .def("ClearBuffer",
+            &ktt::Tuner::ClearBuffer,
+            py::arg("id")
+        )
         .def("Run", py::overload_cast<const ktt::KernelId, const ktt::KernelConfiguration&,
             const std::vector<ktt::BufferOutputDescriptor>&>(&ktt::Tuner::Run))
         .def("Run", py::overload_cast<const ktt::KernelId, const ktt::KernelConfiguration&, const ktt::KernelDimensions&,
@@ -586,7 +612,18 @@ void InitializePythonTuner(py::module_& module)
             py::arg("stopCondition") = nullptr
         )
         .def("SetSearcher", &ktt::Tuner::SetSearcher)
-        .def("SetProfileBasedSearcher", &ktt::Tuner::SetProfileBasedSearcher)
+        .def
+        (
+            "SetProfileBasedSearcher",
+            &ktt::Tuner::SetProfileBasedSearcher,
+            py::arg("id"),
+            py::arg("modelPath"),
+            py::arg("useBuiltinModule") = true,
+            py::arg("batchSize") = 5,
+            py::arg("neighborSize") = 100,
+            py::arg("randomSize") = 10,
+            py::arg("seed") = py::none()
+        )
         .def
         (
             "InitializeConfigurationData",

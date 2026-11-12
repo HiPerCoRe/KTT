@@ -7,6 +7,10 @@ RandomSearcher::RandomSearcher() :
     Searcher()
 {}
 
+RandomSearcher::RandomSearcher(const uint64_t seed) :
+    Searcher(seed)
+{}
+
 void RandomSearcher::OnInitialize()
 {
     m_CurrentConfiguration = GetRandomConfiguration();

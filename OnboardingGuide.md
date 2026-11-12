@@ -238,11 +238,19 @@ const ktt::ArgumentId lvalueId = tuner.AddArgumentScalar(lvalueScalar);
 const ktt::ArgumentId rvalueId = tuner.AddArgumentScalar(34);
 ```
 
+Due to being copies managed by KTT, scalar arguments have to be updated manually, either through the tuner:
+```cpp
+const float newValue = 3.1f
+tuner.UpdateScalarArgument(scalarId, &newValue)
+```
+or through a kernel launcher, which we will discuss later.
+
 #### Vector arguments
 
 Vector arguments have more customization options available than scalars. Other than the initial data, it is possible to specify whether an argument
-is used for reading or writing. For read-only arguments, additional optimization is possible during offline tuning. Since their contents do not
-change, the buffers must be copied into memory only once before the first kernel configuration is launched and remain the same for subsequent
+is used for reading or writing. For read-only arguments, additional optimization is possible during offline tuning. Since the tuned kernel does not change their contents 
+(they can still be updated with Tuner::UpdateBuffer, but that is only relevant for kernel running or dynamic tuning, which we will discuss later),
+the buffers can be copied into memory only once before the first kernel configuration is launched and remains the same for subsequent
 configurations. Setting correct access types to arguments can therefore lead to better tuning performance.
 
 Next, it is possible to decide the memory location from which a kernel accesses the argument buffer. The two main options are host memory and device
@@ -253,7 +261,9 @@ Unified memory buffers can be accessed from both host and kernel sides, relying 
 
 Management type option specifies whether buffer management is handled automatically by the tuner (e.g., write arguments are automatically reset
 to initial state before a new kernel configuration is launched, buffers are created and deleted automatically) or by the user. In some advanced cases,
-users may wish to manage the buffers manually. Note, however, that this requires the usage of kernel launchers which we will discuss later.
+users may wish to manage the buffers manually. This can be done through Tuner
+methods like UpdateBuffer, DownloadBuffer, and ClearBuffer. Alternatively,
+it is possible to use a kernel launcher, which we will discuss later.
 
 The final option for vector arguments is whether the initial data provided by the user should be copied inside the tuner or referenced directly. Note that 
 this is a different option than the memory location of data accessed by the kernel - KTT can make its private copy of provided buffer and then copy it to the 
@@ -711,6 +721,33 @@ method rather than the generic `SetSearcher()`. Its detailed usage is beyond the
 The searcher API is public so that users can implement their own searchers. The API also includes utility methods to simplify custom searcher
 implementation. These include a method to get random unexplored configuration or neighboring configurations (configurations that differ in a small
 number of parameter values compared to the specified configuration).
+
+#### Seeding searchers
+
+Searchers which explore the configuration space randomly can be given a seed, either through a searcher constructor or through the `SetSeed()` method
+of the searcher. The seed must be assigned before the configuration space is generated for the corresponding kernel, i.e., before the first tuning method
+is called or before `InitializeConfigurationData()` is called.
+
+```cpp
+tuner.SetSearcher(kernel, std::make_unique<ktt::RandomSearcher>(42));
+```
+
+The seed initializes both the random number generator which the framework uses to pick random configurations (`GetRandomConfiguration()`) and the generator
+owned by the searcher itself, if it has one. Both generators are seeded every time the configuration space is generated for the kernel, so a seeded searcher
+draws the same sequence of random numbers in every tuning run, including runs which follow `ClearConfigurationData()`. A searcher without a seed uses a randomly
+initialized generator instead, so its sequence of random numbers differs between runs. Each kernel has its own generator, so random numbers drawn while tuning
+one kernel never affect the sequence drawn for another kernel.
+
+Note that a seeded sequence of random numbers does not imply a fully deterministic tuning process:
+* `RandomSearcher` becomes fully deterministic, because it bases its decisions solely on the sequence of random numbers.
+* `McmcSearcher` and `ProfileBasedSearcher` **do not** become deterministic during regular tuning, even when the seed is set. Both searchers base their
+decisions on kernel durations and profiling counters measured during tuning, and these fluctuate between runs. Two runs of a seeded `McmcSearcher` may
+therefore explore different configurations.
+* All searchers become deterministic during simulated tuning (`SimulateTuning()`), because kernel durations are replayed from previously collected results
+instead of being measured.
+
+If a custom searcher owns its own random number generator, it should seed it by overriding the `OnSeed()` method, which the framework calls before
+`OnInitialize()` whenever a seed is assigned.
 
 ----
 

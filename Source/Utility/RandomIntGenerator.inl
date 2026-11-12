@@ -7,7 +7,14 @@ namespace ktt
 
 template <typename IntegerType>
 RandomIntGenerator<IntegerType>::RandomIntGenerator() :
-    m_Engine(m_Device())
+    m_Engine(std::random_device{}())
+{
+    static_assert(std::is_integral_v<IntegerType>, "Only integer types are supported");
+}
+
+template <typename IntegerType>
+RandomIntGenerator<IntegerType>::RandomIntGenerator(const uint64_t seed) :
+    m_Engine(static_cast<std::default_random_engine::result_type>(seed))
 {
     static_assert(std::is_integral_v<IntegerType>, "Only integer types are supported");
 }

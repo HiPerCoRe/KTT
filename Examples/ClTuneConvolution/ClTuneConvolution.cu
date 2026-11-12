@@ -170,13 +170,9 @@ inline __device__ void AccumulateLocal(float *lmem, const int loff,
   }
 
   // Loops over the neighbourhood
-  #if UNROLL_FACTOR1 > 0
-    #pragma unroll UNROLL_FACTOR1
-  #endif
+  #pragma unroll UNROLL_FACTOR
   for (int fx=0; fx<FS; ++fx) {
-    #if UNROLL_FACTOR2 > 0
-      #pragma unroll UNROLL_FACTOR2
-    #endif
+    #pragma unroll UNROLL_FACTOR
     for (int fy=0; fy<FS; ++fy) {
       const float coefficient = coeff[fy*FS + fx];
 
@@ -212,9 +208,9 @@ inline __device__ void AccumulateGlobal(const  float* src, const int goff,
   }
 
   // Loops over the neighbourhood
-  #pragma unroll UNROLL_FACTOR1
+  #pragma unroll UNROLL_FACTOR
   for (int fx=0; fx<FS; ++fx) {
-    #pragma unroll UNROLL_FACTOR2
+    #pragma unroll UNROLL_FACTOR
     for (int fy=0; fy<FS; ++fy) {
       const float coefficient = coeff[fy*FS + fx];
 

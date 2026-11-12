@@ -1,3 +1,4 @@
+#include "KttTypes.h"
 #ifdef KTT_PYTHON
 #include <pybind11/stl.h>
 #endif // KTT_PYTHON
@@ -390,6 +391,18 @@ ArgumentId Tuner::AddArgumentScalar(const void* data, const size_t dataSize, con
     }
 }
 
+void Tuner::UpdateScalarArgument(const ArgumentId& id, const void* data)
+{
+    try
+    {
+        m_Tuner->UpdateScalarArgument(id, data);
+    }
+    catch (const KttException& exception)
+    {
+        TunerCore::Log(LoggingLevel::Error, exception.what());
+    }
+}
+
 void Tuner::RemoveArgument(const ArgumentId& id)
 {
     try
@@ -407,6 +420,54 @@ void Tuner::SetReadOnlyArgumentCache(const bool flag)
     try
     {
         m_Tuner->SetReadOnlyArgumentCache(flag);
+    }
+    catch (const KttException& exception)
+    {
+        TunerCore::Log(LoggingLevel::Error, exception.what());
+    }
+}
+
+void Tuner::SetWriteOnlyArgumentZero(const bool flag)
+{
+    try
+    {
+        m_Tuner->SetWriteOnlyArgumentZero(flag);
+    }
+    catch (const KttException& exception)
+    {
+        TunerCore::Log(LoggingLevel::Error, exception.what());
+    }
+}
+
+void Tuner::UpdateBuffer(const ArgumentId& id, const void *dataPtr, const size_t dataSize)
+{
+    try
+    {
+        m_Tuner->UpdateBuffer(id, dataPtr, dataSize);
+    }
+    catch (const KttException& exception)
+    {
+        TunerCore::Log(LoggingLevel::Error, exception.what());
+    }
+}
+
+void Tuner::DownloadBuffer(const ArgumentId& id, void* destination, const size_t dataSize)
+{
+    try
+    {
+        m_Tuner->DownloadBuffer(id, destination, dataSize);
+    }
+    catch (const KttException& exception)
+    {
+        TunerCore::Log(LoggingLevel::Error, exception.what());
+    }
+}
+
+void Tuner::ClearBuffer(const ArgumentId& id)
+{
+    try 
+    {
+        m_Tuner->ClearBuffer(id);
     }
     catch (const KttException& exception)
     {
@@ -632,7 +693,7 @@ void Tuner::SetSearcher(const KernelId id, std::unique_ptr<Searcher> searcher)
     }
 }
 
-void Tuner::SetProfileBasedSearcher([[maybe_unused]] const KernelId id, [[maybe_unused]] const std::string& modelPath, [[maybe_unused]] const bool useBuiltinModule, [[maybe_unused]] const uint batchSize, [[maybe_unused]] const uint neighborSize, [[maybe_unused]] const uint randomSize)
+void Tuner::SetProfileBasedSearcher([[maybe_unused]] const KernelId id, [[maybe_unused]] const std::string& modelPath, [[maybe_unused]] const bool useBuiltinModule, [[maybe_unused]] const uint batchSize, [[maybe_unused]] const uint neighborSize, [[maybe_unused]] const uint randomSize, [[maybe_unused]] const std::optional<uint64_t> seed)
 {
     try
     {
@@ -647,7 +708,7 @@ void Tuner::SetProfileBasedSearcher([[maybe_unused]] const KernelId id, [[maybe_
         auto& interpreter = PythonInterpreter::GetInterpreter();
         pybind11::gil_scoped_acquire acquire;
         pybind11::module_ searcher = pybind11::module_::import(ProfileBasedSearcherName.c_str());
-        searcher.attr("executeSearcher")(this, id, modelPath, batchSize, neighborSize, randomSize, this->GetLoggingLevel());
+        searcher.attr("executeSearcher")(this, id, modelPath, batchSize, neighborSize, randomSize, this->GetLoggingLevel(), seed);
         interpreter.ReleaseInterpreter();
 
         #endif // KTT_PYTHON
@@ -662,6 +723,67 @@ void Tuner::SetProfileBasedSearcher([[maybe_unused]] const KernelId id, [[maybe_
         TunerCore::Log(LoggingLevel::Error, exception.what());
     }
     #endif // KTT_PYTHON
+}
+
+void Tuner::SetRefinementParameters(const KernelId id, const RefinementParameters& parameters)
+{
+    try
+    {
+        m_Tuner->SetRefinementParameters(id, parameters);
+    }
+    catch (const KttException& exception)
+    {
+        TunerCore::Log(LoggingLevel::Error, exception.what());
+    }
+}
+
+void Tuner::FinishExploration(const KernelId id)
+{
+    try
+    {
+        m_Tuner->FinishExploration(id);
+    }
+    catch (const KttException& exception)
+    {
+        TunerCore::Log(LoggingLevel::Error, exception.what());
+    }
+}
+
+void Tuner::ResumeExploration(const KernelId id)
+{
+    try
+    {
+        m_Tuner->ResumeExploration(id);
+    }
+    catch (const KttException& exception)
+    {
+        TunerCore::Log(LoggingLevel::Error, exception.what());
+    }
+}
+
+void Tuner::RepeatRefinement(const KernelId id)
+{
+    try
+    {
+        m_Tuner->RepeatRefinement(id);
+    }
+    catch (const KttException& exception)
+    {
+        TunerCore::Log(LoggingLevel::Error, exception.what());
+    }
+}
+
+TuningPhase Tuner::GetTuningPhase(const KernelId id) const
+{
+    try
+    {
+        return m_Tuner->GetTuningPhase(id);
+    }
+    catch (const KttException& exception)
+    {
+        TunerCore::Log(LoggingLevel::Error, exception.what());
+        return TuningPhase::Finished;
+    }
 }
 
 void Tuner::InitializeConfigurationData(const KernelId id)
@@ -760,13 +882,26 @@ std::string Tuner::GetKernelDefinitionSource(const KernelDefinitionId id, const 
     }
 }
 
+ktt::db::TuningInfo Tuner::GetDatabaseTuningInfo(const KernelId id) const
+{
+    try
+    {
+        return m_Tuner->GetDatabaseTuningInfo(id);
+    }
+    catch (const KttException& exception)
+    {
+        TunerCore::Log(LoggingLevel::Error, exception.what());
+        return ktt::db::TuningInfo();
+    }
+}
+
 void Tuner::SetTimeUnit(const TimeUnit unit)
 {
     TunerCore::SetTimeUnit(unit);
 }
 
 KernelResult Tuner::GetBestResult(const std::vector<KernelResult>& results) const
-{   
+{
     try
     {
         return m_Tuner->GetBestResult(results);
@@ -919,6 +1054,31 @@ void Tuner::SetCompilerOptions(const std::string& options, const bool overrideDe
     try
     {
         m_Tuner->SetCompilerOptions(options, overrideDefault);
+    }
+    catch (const KttException& exception)
+    {
+        TunerCore::Log(LoggingLevel::Error, exception.what());
+    }
+}
+
+std::string Tuner::GetCompilerOptions()
+{
+    try
+    {
+        return m_Tuner->GetCompilerOptions();
+    }
+    catch (const KttException& exception)
+    {
+        TunerCore::Log(LoggingLevel::Error, exception.what());
+        return std::string();
+    }
+}
+
+void Tuner::AddCompilerOptions(const std::string& options)
+{
+    try
+    {
+        m_Tuner->AddCompilerOptions(options);
     }
     catch (const KttException& exception)
     {

@@ -30,12 +30,15 @@
 #include <Utility/Logger/LoggingLevel.h>
 #include <KttTypes.h>
 #include <Api/Configuration/PreciseMeasurementParameters.h>
+#include <Api/Configuration/RefinementParameters.h>
+#include <Api/Configuration/TuningPhase.h>
 
 // Data holders
 #include <Api/Configuration/DimensionVector.h>
 #include <Api/Configuration/KernelConfiguration.h>
 #include <Api/Info/DeviceInfo.h>
 #include <Api/Info/PlatformInfo.h>
+#include <Api/Info/DatabaseTuningInfo.h>
 #include <Api/Output/BufferOutputDescriptor.h>
 #include <Api/Output/KernelResult.h>
 
@@ -545,6 +548,15 @@ public:
       */
     ArgumentId AddArgumentScalar(const void* data, const size_t dataSize, const ArgumentId& customId = "");
 
+    /** @fn void UpdateScalarArgument(const ArgumentId& id, const void* data)
+      * Updates the data of the specified scalar argument. Only the data stored by the tuner are changed, nothing is transferred
+      * to the device. Every following run of a kernel that uses the argument therefore uses the new data. This differs from
+      * ComputeInterface::UpdateScalarArgument(), which updates the scalar argument only under the currently launched kernel.
+      * @param id Id of scalar argument which will be updated.
+      * @param data Pointer to new data for scalar argument. The data must have matching kernel argument data type.
+      */
+    void UpdateScalarArgument(const ArgumentId& id, const void* data);
+
     /** @fn template <typename T> ArgumentId AddArgumentLocal(const size_t localMemorySize, const ArgumentId& customId = "")
       * Adds new local memory (shared memory in CUDA) argument to the tuner. All local memory arguments are read-only and cannot be
       * initialized from host memory. In case of CUDA API usage, local memory arguments cannot be directly set as kernel function
@@ -583,6 +595,55 @@ public:
       * @param flag If true, read-only argument caching is enabled. It is disabled otherwise.
       */
     void SetReadOnlyArgumentCache(const bool flag);
+
+    /** @fn void SetWriteOnlyArgumentZero(const bool flag)
+      * When enabled, write-only kernel arguments are kept in GPU memory across configurations and zeroed in-place
+      * (via cuMemset) instead of being freed and reallocated for each configuration. This keeps buffer addresses
+      * stable across the tuning run, eliminating per-configuration variation in DRAM partition mapping that can
+      * otherwise cause measurement instability. Disabled by default.
+      * @param flag If true, write-only argument zeroing is enabled. It is disabled otherwise.
+      */
+    void SetWriteOnlyArgumentZero(const bool flag);
+
+    /** @fn void UpdateBuffer(const ArgumentId& id)
+      * Updates data in the compute buffer of a specified vector argument. Same behavior as ComputeInterface::UpdateBuffer():
+      * If the compute buffer of the argument does not exist yet, it is created and the data are uploaded into it.
+      * If the buffer already exists, its content is replaced without any allocations.
+      * Except: duration of this call is not counted towards kernel's total duration (as it would be in the ComputeInterface 
+      * call) or data movement overhead (as it would be with framework-managed buffers).
+      * @param id Id of vector argument which will be uploaded. The argument's management type should be User, not Framework,
+      * to avoid duplicate work and possible inconsistencies.
+      * @param dataPtr Pointer to the raw data in host memory. If dataPtr is nullptr, the data are taken from 
+      * the argument, which means either a copy managed by KTT, or a reference back to user data 
+      * (see argument referenceUserData of Tuner::AddArgumentVector).
+      * @param dataSize Size in bytes of buffer portion which will be uploaded from the specified source, starting with the first
+      * byte. If zero, the entire buffer will be uploaded.
+      */
+    void UpdateBuffer(const ArgumentId& id, const void *dataPtr = nullptr, const size_t dataSize = 0);
+
+    /** @fn void DownloadBuffer(const ArgumentId& id, void* destination, const size_t dataSize = 0)
+      * Downloads the specified vector argument from its compute buffer. The transfer is submitted to the default queue and the
+      * method returns after it is finished. The compute buffer of the argument must already exist, which is the case after the
+      * argument has been uploaded to the device for the first time (e.g., by a previous call to Run() or TuneIteration() or
+      * UpdateBuffer()).
+      * Note that duration of this call is not counted towards kernel's total duration (as it would be in the ComputeInterface 
+      * call) or data movement overhead (as it would be with framework-managed buffers).
+      * @param id Id of vector argument which will be downloaded.
+      * @param destination Buffer where the argument data will be downloaded. Its size must be equal or greater than the specified
+      * data size.
+      * @param dataSize Size in bytes of buffer portion which will be downloaded to specified destination, starting with the first
+      * byte. If zero, the entire buffer will be downloaded.
+      */
+    void DownloadBuffer(const ArgumentId& id, void* destination, const size_t dataSize = 0);
+
+    /** @fn void ClearBuffer(const ArgumentId& id) = 0
+      * Removes compute buffer for the specified vector argument. This method should be used mainly with arguments with
+      * ::ArgumentManagementType set to User.
+      * Note that duration of this call is not counted towards kernel's total duration (as it would be in the ComputeInterface 
+      * call) or data movement overhead (as it would be with framework-managed buffers).
+      * @param id Id of vector argument whose buffer will be removed.
+      */
+    void ClearBuffer(const ArgumentId& id);
 
     /** @fn KernelResult Run(const KernelId id, const KernelConfiguration& configuration,
       * const std::vector<BufferOutputDescriptor>& output)
@@ -848,12 +909,14 @@ public:
 
     /** @fn void SetSearcher(const KernelId id, std::unique_ptr<Searcher> searcher)
       * Sets searcher which will be used during kernel tuning. If no searcher is specified, DeterministicSearcher will be used.
+      * Searchers which explore the configuration space randomly can be given a seed which makes the sequence of random numbers
+      * they draw reproducible. See Searcher::SetSeed method for more information.
       * @param id Id of kernel for which searcher will be set.
       * @param searcher Searcher which decides which kernel configuration will be launched next. See Searcher for more information.
       */
     void SetSearcher(const KernelId id, std::unique_ptr<Searcher> searcher);
 
-    /** @fn void SetProfileBasedSearcher(const KernelId id, const std::string& modelPath, const bool useBuiltinModule = true, const uint batchSize = 5, const uint neighborSize = 100, const uint randomSize = 10)
+    /** @fn void SetProfileBasedSearcher(const KernelId id, const std::string& modelPath, const bool useBuiltinModule = true, const uint batchSize = 5, const uint neighborSize = 100, const uint randomSize = 10, const std::optional<uint64_t> seed = std::nullopt)
       * Sets profile-based searcher to be used during kernel tuning. This is special method for profile-based searcher, for other searchers, use SetSearcher.
       * @param id Id of kernel for which searcher will be set.
       * @param modelPath Path to a ML model file containing trained model for the tuned kernel.
@@ -862,8 +925,47 @@ public:
       * @param batchSize number of configuration from which the fastest one is profiled. Default value also needs to be changed in TuningLoader/Commands/SearcherCommand.cpp
       * @param neighborSize number of neighboring configurations that are used for batch selection. Default value also needs to be changed in TuningLoader/Commands/SearcherCommand.cpp
       * @param randomSize number of random configurations that are used for batch selection. Default value also needs to be changed in TuningLoader/Commands/SearcherCommand.cpp
+      * @param seed Optional seed for the source of randomness used by the searcher. See Searcher::SetSeed method for more information. Note that the seed
+      * makes the sequence of random numbers drawn by the searcher reproducible, but it does not make the tuning process deterministic, because the searcher
+      * also bases its decisions on profiling counters and kernel durations measured during tuning, which fluctuate between tuning runs.
       */
-    void SetProfileBasedSearcher(const KernelId id, const std::string& modelPath, const bool useBuiltinModule = true, const uint batchSize = 5, const uint neighborSize = 100, const uint randomSize = 10);
+    void SetProfileBasedSearcher(const KernelId id, const std::string& modelPath, const bool useBuiltinModule = true, const uint batchSize = 5, const uint neighborSize = 100, const uint randomSize = 10, const std::optional<uint64_t> seed = std::nullopt);
+
+    /** @fn void SetRefinementParameters(const KernelId id, const RefinementParameters& parameters)
+      * Sets refinement phase parameters for the specified kernel during dynamic tuning.
+      * Refinement is implicitly turned off,has to be called before tuning or else the previous configurations wont be taken in consideration.
+      * @param id Id of kernel for which the refinement parameters will be set.
+      * @param parameters Parameters controlling top candidates selection and repeated measurements.
+      */
+    void SetRefinementParameters(const KernelId id, const RefinementParameters& parameters);
+
+    /** @fn void FinishExploration(const KernelId id)
+      * Ends the exploration phase for the specified kernel early and transitions to the refinement phase (if configured)
+      * or directly to the finished phase.
+      * @param id Id of kernel whose exploration phase will be finished.
+      */
+    void FinishExploration(const KernelId id);
+
+    /** @fn void ResumeExploration(const KernelId id)
+      * Resumes exploration of the specified kernel after it was finished by FinishExploration. The refinement winner becomes
+      * the best configuration and only the refined candidates are kept for the next refinement.
+      * @param id Id of kernel whose exploration will be resumed.
+      */
+    void ResumeExploration(const KernelId id);
+
+    /** @fn void RepeatRefinement(const KernelId id)
+      * Repeats the last finished refinement of the specified kernel with the same candidates. Only new measurements are
+      * used to select the winner, the previous winner remains the best configuration until the refinement finishes.
+      * @param id Id of kernel whose refinement will be repeated.
+      */
+    void RepeatRefinement(const KernelId id);
+
+    /** @fn TuningPhase GetTuningPhase(const KernelId id) const
+      * Returns the current dynamic tuning phase for the specified kernel.
+      * @param id Id of kernel for which the tuning phase will be retrieved.
+      * @return Current tuning phase of the specified kernel. See ::TuningPhase for more information.
+      */
+    TuningPhase GetTuningPhase(const KernelId id) const;
 
     /** @fn void InitializeConfigurationData(const KernelId id)
       * Generates configuration space and initializes searcher for the specified kernel.
@@ -927,6 +1029,20 @@ public:
       * @return Kernel definition source with preprocessor definitions for the specified kernel based on provided configuration.
       */
     std::string GetKernelDefinitionSource(const KernelDefinitionId id, const KernelConfiguration& configuration) const;
+
+    /** @fn ktt::db::TuningInfo GetDatabaseTuningInfo(const KernelId id) const
+      * Collects the information about a kernel and the current device that is needed to save or query its tuning
+      * results in the KTT database. Computes the fingerprints identifying the kernel's tuning space (kernel source,
+      * tuning parameters and the whole configuration space) and captures the properties of the currently active
+      * device (name, type, vendor, compute API and API-specific details such as OpenCL/Vulkan extensions or CUDA
+      * compute capability). The returned value is the descriptor passed to the ktt::db::Database methods, e.g.
+      * SaveResults, SimpleGetBestResults or GetBestResults. The inputData field is left empty and may be filled in
+      * by the caller before saving.
+      * @param id Id of kernel for which the tuning information is collected.
+      * @return TuningInfo holding the tuning space fingerprints and current device info for the specified kernel.
+      * See ktt::db::TuningInfo for more information.
+      */
+    ktt::db::TuningInfo GetDatabaseTuningInfo(const KernelId id) const;
 
     /** @fn static void SetTimeUnit(const TimeUnit unit)
       * Sets time unit used for printing of results. Default time unit is milliseconds.
@@ -1043,6 +1159,19 @@ public:
       * options will be applied.
       */
     void SetCompilerOptions(const std::string& options, const bool overrideDefault = false);
+
+    /** @fn std::string GetCompilerOptions()
+      * Returns the currently set compute API compiler options.
+      * @return Currently set compiler options.
+      */
+    std::string GetCompilerOptions();
+
+    /** @fn void AddCompilerOptions(const std::string& options)
+      * Adds the specified options to the currently set compute API compiler options. The options are automatically prepended with a single
+      * space character.
+      * @param options Compiler options that will be appended.
+      */
+    void AddCompilerOptions(const std::string& options);
 
     /** @fn void SetCompiler(const std::string& compiler)
       * Sets the compiler executable to use for kernel compilation. This is only supported for the C++ backend.

@@ -66,7 +66,7 @@ void InitializePythonComputeInterface(py::module_& module)
             "UpdateBuffer",
             &ktt::ComputeInterface::UpdateBuffer,
             py::arg("id"),
-            py::arg("data"),
+            py::arg("data") = py::none(),
             py::arg("dataSize") = 0
         )
         .def

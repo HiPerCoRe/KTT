@@ -61,9 +61,8 @@ public:
     void SetProfiling(const bool profiling) override;
 
     // Buffer methods
-    TransferActionId UploadArgument(KernelArgument& kernelArgument, const QueueId queueId) override;
-    TransferActionId UpdateArgument(const ArgumentId& id, const QueueId queueId, const void* data,
-        const size_t dataSize) override;
+    TransferActionId UpdateArgument(KernelArgument& kernelArgument, const QueueId queueId, const void* data = nullptr,
+        const size_t dataSize = 0) override;
     TransferActionId DownloadArgument(const ArgumentId& id, const QueueId queueId, void* destination,
         const size_t dataSize) override;
     TransferActionId CopyArgument(const ArgumentId& destination, const QueueId queueId, const ArgumentId& source,
@@ -102,9 +101,9 @@ public:
     void EnsureThreadContext() override;
     void SetCompiler(const std::string& compiler) override;
     void Sanitize(const QueueId queueId) override;
+    void ZeroBuffer(const ArgumentId& id, const QueueId queueId) override;
 
 private:
-    EngineConfiguration m_Configuration;
     DeviceIndex m_DeviceIndex;
     DeviceInfo m_DeviceInfo;
     IdGenerator<QueueId> m_QueueIdGenerator;

@@ -22,8 +22,63 @@ void ConfigurationManager::SetSearcher(const KernelId id, std::unique_ptr<Search
     m_Searchers[id] = std::move(searcher);
 }
 
+void ConfigurationManager::SetRefinementParameters(const KernelId id, const RefinementParameters& parameters)
+{
+    Logger::LogDebug("Setting refinement parameters for kernel with id " + std::to_string(id));
+
+    if (HasData(id))
+    {
+        m_ConfigurationData[id]->SetRefinementParameters(parameters);
+    }
+
+    m_RefinementParameters[id] = parameters;
+
+}
+
+void ConfigurationManager::FinishExploration(const KernelId id)
+{
+    if (HasData(id))
+    {
+        m_ConfigurationData[id]->FinishExploration();
+    }
+}
+
+void ConfigurationManager::ResumeExploration(const KernelId id)
+{
+    if (HasData(id))
+    {
+        m_ConfigurationData[id]->ResumeExploration();
+    }
+}
+
+void ConfigurationManager::RepeatRefinement(const KernelId id)
+{
+    if (HasData(id))
+    {
+        m_ConfigurationData[id]->RepeatRefinement();
+    }
+}
+
+void ConfigurationManager::CancelRefinement(const KernelId id)
+{
+    if (HasData(id))
+    {
+        m_ConfigurationData[id]->CancelRefinement();
+    }
+}
+
+TuningPhase ConfigurationManager::GetTuningPhase(const KernelId id) const
+{
+    if (!HasData(id))
+    {
+        return TuningPhase::Finished;
+    }
+
+    return m_ConfigurationData.find(id)->second->GetPhase();
+}
+
 void ConfigurationManager::InitializeData(const Kernel& kernel, const bool isSeparateOptionsGroup,
-    const KernelConfiguration& baseConfiguration)
+                                          const KernelConfiguration& baseConfiguration)
 {
     const auto id = kernel.GetId();
     Logger::LogDebug("Initializing configuration data for kernel " + kernel.GetName());
@@ -33,7 +88,12 @@ void ConfigurationManager::InitializeData(const Kernel& kernel, const bool isSep
         m_Searchers[id] = std::make_unique<DeterministicSearcher>();
     }
 
-    m_ConfigurationData[id] = std::make_unique<ConfigurationData>(*m_Searchers[id], kernel, isSeparateOptionsGroup, baseConfiguration);
+    std::optional<RefinementParameters> refParams;
+    if (ContainsKey(m_RefinementParameters, id))
+    {
+        refParams = m_RefinementParameters[id];
+    }
+    m_ConfigurationData[id] = std::make_unique<ConfigurationData>(*m_Searchers[id], kernel, isSeparateOptionsGroup, baseConfiguration, refParams);
 }
 
 void ConfigurationManager::ClearData(const KernelId id, const bool clearSearcher)
@@ -109,6 +169,15 @@ KernelConfiguration ConfigurationManager::GetBestConfiguration(const KernelId id
     }
 
     return m_ConfigurationData.find(id)->second->GetBestConfiguration();
+}
+size_t ConfigurationManager::GetConfigurationFingerprint(const KernelId id) const
+{
+    if (!HasData(id))
+    {
+        throw KttException("The configuration fingerprint can only be retrieved for kernels with initialized configuration data");
+    }
+
+    return m_ConfigurationData.find(id)->second->GetConfigurationFingerprint();
 }
 
 } // namespace ktt

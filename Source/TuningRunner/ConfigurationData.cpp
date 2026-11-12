@@ -10,18 +10,22 @@
 #include <Utility/Logger/Logger.h>
 #include <Utility/StlHelpers.h>
 #include <Utility/Timer/Timer.h>
+#include <Utility/Fingerprint/FingerprintUtility.h>
 
 namespace ktt
 {
 
 ConfigurationData::ConfigurationData(Searcher& searcher, const Kernel& kernel, const bool isSeparateOptionsGroup,
-    const KernelConfiguration& baseConfiguration) :
+    const KernelConfiguration& baseConfiguration, const std::optional<RefinementParameters>& refinementParameters) :
     m_BestConfiguration({KernelConfiguration(), InvalidDuration}),
+    m_Generator(searcher.HasSeed() ? RandomIntGenerator<uint64_t>(searcher.GetSeed()) : RandomIntGenerator<uint64_t>()),
     m_Searcher(searcher),
     m_Kernel(kernel),
     m_SearcherActive(false),
     m_IsSeparateOptionsGroup(isSeparateOptionsGroup),
-    m_BaseConfiguration(baseConfiguration)
+    m_BaseConfiguration(baseConfiguration),
+    m_ExplorationFinishedByUser(false),
+    m_RefinementParameters(refinementParameters)
 {
     InitializeConfigurations();
 }
@@ -33,25 +37,50 @@ ConfigurationData::~ConfigurationData()
 
 bool ConfigurationData::CalculateNextConfiguration(const KernelResult& previousResult)
 {
+    if (GetPhase() == TuningPhase::Finished)
+    {
+        return false;
+    }
+
+    if (GetPhase() == TuningPhase::Refinement)
+    {
+        m_Refinement->AddResult(previousResult);
+        if (m_Refinement->IsFinished())
+        {
+            m_RefinementWinner = m_Refinement->GetWinner();
+            return false;
+        }
+        return true;
+    }
+
     const auto& previousConfiguration = previousResult.GetConfiguration();
     const uint64_t index = GetIndexForConfiguration(previousConfiguration);
     m_ExploredConfigurations.insert(index);
 
     if (previousResult.IsValid())
     {
+        if (m_RefinementParameters.has_value())
+        {
+            m_History.push_back({previousConfiguration, previousResult.GetTotalDuration()});
+        }
+
         UpdateBestConfiguration(previousResult);
     }
 
-    if (IsProcessed())
+    if (IsExplorationFinished())
     {
-        return false;
+        TransitionToRefinement();
+        return !IsProcessed();
     }
 
     try
     {
         m_SearcherActive = m_Searcher.CalculateNextConfiguration(previousResult);
-        const auto& currentConfiguration = GetCurrentConfiguration();
-        Logger::LogInfo("Searcher selected configuration " + std::to_string(GetIndexForConfiguration(currentConfiguration)) + ": " + currentConfiguration.GetString());
+        if (m_SearcherActive)
+        {
+            const auto& currentConfiguration = GetCurrentConfiguration();
+            Logger::LogInfo("Searcher selected configuration " + std::to_string(GetIndexForConfiguration(currentConfiguration)) + ": " + currentConfiguration.GetString());
+        }
     }
     catch (const std::runtime_error& error)
     {
@@ -61,10 +90,13 @@ bool ConfigurationData::CalculateNextConfiguration(const KernelResult& previousR
 
     if (!m_SearcherActive)
     {
-        Logger::LogInfo("Searcher failed to calculate next configuration for kernel " + m_Kernel.GetName());
+        Logger::LogInfo("Searcher failed to calculate next configuration for kernel " + m_Kernel.GetName() + " or space exhausted.");
+        TransitionToRefinement();
+        return !IsProcessed();
     }
 
-    return m_SearcherActive;
+    return true;
+
 }
 
 void ConfigurationData::ListConfigurations() const
@@ -129,7 +161,7 @@ uint64_t ConfigurationData::GetIndexForConfiguration(const KernelConfiguration& 
 
 KernelConfiguration ConfigurationData::GetRandomConfiguration() const
 {
-    KttAssert(!IsProcessed(), "This should not be called after configuration space exploration is finished.");
+    KttAssert(!IsExplorationFinished(), "This should not be called after configuration space exploration is finished.");
     const uint64_t index = m_Generator.Generate(0, GetTotalConfigurationsCount() - 1, m_ExploredConfigurations);
     return GetConfigurationForIndex(index);
 }
@@ -202,21 +234,133 @@ const std::set<uint64_t>& ConfigurationData::GetExploredConfigurations() const
 
 bool ConfigurationData::IsProcessed() const
 {
-    return GetExploredConfigurationsCount() >= GetTotalConfigurationsCount() || !m_SearcherActive;
+    return GetPhase() == TuningPhase::Finished;
+}
+
+bool ConfigurationData::IsExplorationFinished() const
+{
+    return GetExploredConfigurationsCount() >= GetTotalConfigurationsCount() || !m_SearcherActive || m_ExplorationFinishedByUser;
+}
+
+TuningPhase ConfigurationData::GetPhase() const
+{
+    if (!IsExplorationFinished())
+    {
+        return TuningPhase::Exploration;
+    }
+
+    if (m_Refinement && !m_Refinement->IsFinished())
+    {
+        return TuningPhase::Refinement;
+    }
+
+    return TuningPhase::Finished;
+}
+
+void ConfigurationData::FinishExploration()
+{
+    if (m_ExplorationFinishedByUser || (m_Refinement && !m_Refinement->IsFinished()) || GetPhase() == TuningPhase::Finished)
+    {
+        Logger::LogWarning("Exploration is already finished or refinement is active.");
+        return;
+    }
+
+    m_ExplorationFinishedByUser = true;
+    TransitionToRefinement();
+}
+
+void ConfigurationData::ResumeExploration()
+{
+    if (GetPhase() != TuningPhase::Finished || !m_ExplorationFinishedByUser)
+    {
+        Logger::LogWarning("Exploration can be resumed only after it was finished by the user.");
+        return;
+    }
+
+    std::vector<std::pair<KernelConfiguration, Nanoseconds>> refined;
+
+    if (m_Refinement != nullptr)
+    {
+        refined = m_Refinement->GetRefinedResults();
+    }
+
+    for (const auto& [congiguration, duration] : refined)
+    {
+        if (congiguration == m_RefinementWinner)
+        {
+            m_BestConfiguration = {congiguration, duration};
+        }
+    }
+
+    m_History = std::move(refined);
+    m_Refinement.reset();
+    m_RefinementWinner = KernelConfiguration();
+    m_ExplorationFinishedByUser = false;
+
+    Logger::LogInfo("Resuming exploration for kernel " + m_Kernel.GetName());
+}
+
+void ConfigurationData::RepeatRefinement()
+{
+    if (GetPhase() != TuningPhase::Finished || m_Refinement == nullptr)
+    {
+        Logger::LogWarning("Refinement can be repeated only after a refinement has finished.");
+        return;
+    }
+
+    if (!m_Refinement->Restart())
+    {
+        Logger::LogWarning("Not enough candidates to repeat refinement for kernel " + m_Kernel.GetName());
+    }
+}
+
+void ConfigurationData::CancelRefinement()
+{
+    if (GetPhase() != TuningPhase::Refinement)
+    {
+        return;
+    }
+
+    m_Refinement->Cancel();
+    m_RefinementWinner = m_BestConfiguration.first;
+}
+
+void ConfigurationData::SetRefinementParameters(const RefinementParameters& parameters)
+{
+    if (m_Refinement != nullptr)
+    {
+        throw KttException("Refinement parameters cannot be set after refinement has already started.");
+    }
+    m_RefinementParameters = parameters;
 }
 
 KernelConfiguration ConfigurationData::GetCurrentConfiguration() const
 {
-    if (!m_Searcher.IsInitialized() || IsProcessed())
+    const TuningPhase phase = GetPhase();
+
+    if (phase == TuningPhase::Exploration)
     {
-        return KernelConfiguration();
+        if (!m_Searcher.IsInitialized())
+        {
+            return KernelConfiguration();
+        }
+        return m_Searcher.GetCurrentConfiguration();
+    }
+    else if (phase == TuningPhase::Refinement && m_Refinement)
+    {
+        return m_Refinement->GetKernelConfiguration();
     }
 
-    return m_Searcher.GetCurrentConfiguration();
+    return KernelConfiguration();
 }
 
 KernelConfiguration ConfigurationData::GetBestConfiguration() const
 {
+    if (m_RefinementWinner.IsValid())
+    {
+        return m_RefinementWinner;
+    }
+
     if (m_BestConfiguration.second != InvalidDuration)
     {
         return m_BestConfiguration.first;
@@ -225,9 +369,42 @@ KernelConfiguration ConfigurationData::GetBestConfiguration() const
     return GetCurrentConfiguration();
 }
 
+void ConfigurationData::TransitionToRefinement()
+{
+    if (m_Refinement != nullptr)
+    {
+        return;
+    }
+
+    if (!m_RefinementParameters.has_value())
+    {
+        Logger::LogInfo("Refinement is not configured for kernel " + m_Kernel.GetName() + ", skipping it");
+        return;
+    }
+
+    m_Refinement = std::make_unique<ConfigurationRefinement>(*m_RefinementParameters);
+
+    if (!m_Refinement->Start(m_History))
+    {
+        m_RefinementWinner = m_BestConfiguration.first;
+    }
+}
+
 bool ConfigurationData::IsSeparateOptionsGroup() const
 {
     return m_IsSeparateOptionsGroup;
+}
+
+size_t ConfigurationData::GetConfigurationFingerprint() const
+{
+    size_t result = 0;
+
+    for (const auto& forest : m_Forests)
+    {
+        result = FingerprintUtility::HashFunction(result, forest->GetConfigurationFingerprint());
+    }
+
+    return result;
 }
 
 void ConfigurationData::InitializeConfigurations()
@@ -272,7 +449,10 @@ void ConfigurationData::InitializeConfigurations()
     m_BestConfiguration = {initialBest, InvalidDuration};
     m_SearcherActive = true;
     m_Searcher.Initialize(*this);
-    Logger::LogInfo("Searcher selected configuration " + std::to_string(GetIndexForConfiguration(m_Searcher.GetCurrentConfiguration())) + ": " + m_Searcher.GetCurrentConfiguration().GetString());
+    if (m_SearcherActive)
+    {
+        Logger::LogInfo("Searcher selected configuration " + std::to_string(GetIndexForConfiguration(m_Searcher.GetCurrentConfiguration())) + ": " + m_Searcher.GetCurrentConfiguration().GetString());
+    }
 }
 
 void ConfigurationData::UpdateBestConfiguration(const KernelResult& previousResult)
@@ -289,7 +469,7 @@ void ConfigurationData::UpdateBestConfiguration(const KernelResult& previousResu
 
 const ConfigurationForest& ConfigurationData::GetLocalForest(const KernelConfiguration& configuration) const
 {
-    KttAssert(!IsProcessed(), "This should not be called after configuration space exploration is finished.");
+    KttAssert(!IsExplorationFinished(), "This should not be called after configuration space exploration is finished.");
     const auto& pairs = configuration.GetPairs();
 
     if (pairs.empty())

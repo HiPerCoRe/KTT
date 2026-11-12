@@ -19,7 +19,8 @@ KernelRunner::KernelRunner(ComputeEngine& engine, KernelArgumentManager& argumen
     m_Validator(std::make_unique<ResultValidator>(*this)),
     m_Engine(engine),
     m_ArgumentManager(argumentManager),
-    m_ReadOnlyCacheFlag(true)
+    m_ReadOnlyCacheFlag(true),
+    m_WriteOnlyZeroFlag(false)
     //m_ProfilingFlag(false)
 {}
 
@@ -73,12 +74,6 @@ void KernelRunner::SetupBuffers(const Kernel& kernel)
 
         if (argument->GetManagementType() == ArgumentManagementType::User)
         {
-            if (!kernel.HasLauncher() && !argument->HasUserBuffer())
-            {
-                Logger::LogWarning("Kernel argument with id " + id + " has buffer managed by user, but its "
-                    + "associated kernel " + kernel.GetName() + " does not have a launcher defined by user");
-            }
-
             continue;
         }
 
@@ -87,7 +82,13 @@ void KernelRunner::SetupBuffers(const Kernel& kernel)
             continue;
         }
 
-        const auto actionId = m_Engine.UploadArgument(*argument, m_ComputeLayer->GetDefaultQueue());
+        if (m_WriteOnlyZeroFlag && argument->GetAccessType() == ArgumentAccessType::WriteOnly && m_Engine.HasBuffer(id))
+        {
+            m_Engine.ZeroBuffer(id, m_ComputeLayer->GetDefaultQueue());
+            continue;
+        }
+
+        const auto actionId = m_Engine.UpdateArgument(*argument, m_ComputeLayer->GetDefaultQueue());
         m_Engine.WaitForTransferAction(actionId);
     }
 }
@@ -106,6 +107,11 @@ void KernelRunner::CleanupBuffers(const Kernel& kernel)
         }
 
         if (m_ReadOnlyCacheFlag && argument->GetAccessType() == ArgumentAccessType::ReadOnly)
+        {
+            continue;
+        }
+
+        if (m_WriteOnlyZeroFlag && argument->GetAccessType() == ArgumentAccessType::WriteOnly)
         {
             continue;
         }
@@ -129,6 +135,11 @@ void KernelRunner::DownloadBuffers(const std::vector<BufferOutputDescriptor>& ou
 void KernelRunner::SetReadOnlyArgumentCache(const bool flag)
 {
     m_ReadOnlyCacheFlag = flag;
+}
+
+void KernelRunner::SetWriteOnlyArgumentZero(const bool flag)
+{
+    m_WriteOnlyZeroFlag = flag;
 }
 
 void KernelRunner::SetProfiling(const bool flag)

@@ -31,6 +31,7 @@ public:
     void DownloadBuffers(const std::vector<BufferOutputDescriptor>& output);
 
     void SetReadOnlyArgumentCache(const bool flag);
+    void SetWriteOnlyArgumentZero(const bool flag);
     void SetProfiling(const bool flag);
     bool IsProfilingActive() const;
 
@@ -53,6 +54,7 @@ private:
     ComputeEngine& m_Engine;
     KernelArgumentManager& m_ArgumentManager;
     bool m_ReadOnlyCacheFlag;
+    bool m_WriteOnlyZeroFlag;
     //bool m_ProfilingFlag;
     std::optional<PreciseMeasurementParameters> m_PendingPreciseParams;
 
