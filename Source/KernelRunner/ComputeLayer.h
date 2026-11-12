@@ -57,8 +57,8 @@ public:
     void DownloadBuffer(const ArgumentId& id, void* destination, const size_t dataSize = 0) override;
     TransferActionId DownloadBufferAsync(const ArgumentId& id, const QueueId queue, void* destination,
         const size_t dataSize = 0) override;
-    void UpdateBuffer(const ArgumentId& id, const void* data, const size_t dataSize = 0) override;
-    TransferActionId UpdateBufferAsync(const ArgumentId& id, const QueueId queue, const void* data,
+    void UpdateBuffer(const ArgumentId& id, const void* data = nullptr, const size_t dataSize = 0) override;
+    TransferActionId UpdateBufferAsync(const ArgumentId& id, const QueueId queue, const void* data = nullptr,
         const size_t dataSize = 0) override;
     void CopyBuffer(const ArgumentId& destination, const ArgumentId& source, const size_t dataSize = 0) override;
     TransferActionId CopyBufferAsync(const ArgumentId& destination, const ArgumentId& source, const QueueId queue,

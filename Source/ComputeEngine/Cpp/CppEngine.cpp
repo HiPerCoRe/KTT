@@ -260,14 +260,15 @@ void CppEngine::SetProfiling(const bool profiling)
 }
 
 // Buffer methods
-TransferActionId CppEngine::UploadArgument(KernelArgument& kernelArgument, const QueueId queueId)
+TransferActionId CppEngine::UpdateArgument(KernelArgument& kernelArgument, const QueueId queueId, const void* data,
+    const size_t dataSize)
 {
     (void)queueId;
     Timer timer;
     timer.Start();
 
     const ArgumentId& id = kernelArgument.GetId();
-    
+
     // Check if buffer already exists (e.g., from AddCustomBuffer for zero-copy)
     if (m_Buffers.find(id) == m_Buffers.end())
     {
@@ -277,33 +278,13 @@ TransferActionId CppEngine::UploadArgument(KernelArgument& kernelArgument, const
     }
     // If buffer already exists (from AddCustomBuffer), use it as-is (zero-copy)
 
-    timer.Stop();
-    const Nanoseconds overhead = timer.GetElapsedTime();
-
-    // Simulate transfer action using std::promise to avoid thread creation overhead
-    const TransferActionId actionId = m_TransferIdGenerator.GenerateId();
-    std::promise<TransferResult> promise;
-    TransferResult result;
-    result.SetDuration(0);
-    result.SetOverhead(overhead);
-    promise.set_value(result);
-    m_TransferActions[actionId] = promise.get_future();
-    return actionId;
-}
-
-TransferActionId CppEngine::UpdateArgument(const ArgumentId& id, const QueueId queueId, const void* data,
-    const size_t dataSize)
-{
-    (void)queueId;
-    Timer timer;
-    timer.Start();
-
-    auto it = m_Buffers.find(id);
-    if (it == m_Buffers.end())
+    CppBuffer& buffer = m_Buffers[id];
+    const void* actualData = data;
+    if (actualData == nullptr)
     {
-        throw KttException("Buffer with id " + id + " not found");
+        Logger::LogDebug("Data pointer is null, uploading data saved in the kernel argument with id " + id);
+        actualData = kernelArgument.GetData();
     }
-    CppBuffer& buffer = it->second;
     size_t actualDataSize = dataSize;
 
     if (actualDataSize == 0)
@@ -315,11 +296,12 @@ TransferActionId CppEngine::UpdateArgument(const ArgumentId& id, const QueueId q
     {
         throw KttException("Update data size exceeds buffer size");
     }
-    memcpy(buffer.data, data, actualDataSize);
+    memcpy(buffer.data, actualData, actualDataSize);
 
     timer.Stop();
     const Nanoseconds overhead = timer.GetElapsedTime();
 
+    // Simulate transfer action using std::promise to avoid thread creation overhead
     const TransferActionId actionId = m_TransferIdGenerator.GenerateId();
     std::promise<TransferResult> promise;
     TransferResult result;

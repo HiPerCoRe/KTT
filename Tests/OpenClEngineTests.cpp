@@ -21,7 +21,7 @@ TEST_CASE("Working with OpenCL buffer", "OpenClEngine")
 
     SECTION("Transfering argument to / from device")
     {
-        const auto uploadAction = engine.UploadArgument(argument, engine.GetDefaultQueue());
+        const auto uploadAction = engine.UpdateArgument(argument, engine.GetDefaultQueue());
         engine.WaitForTransferAction(uploadAction);
 
         std::vector<float> result(64);
@@ -37,7 +37,7 @@ TEST_CASE("Working with OpenCL buffer", "OpenClEngine")
 
     SECTION("Zeroing argument buffer")
     {
-        const auto uploadAction = engine.UploadArgument(argument, engine.GetDefaultQueue());
+        const auto uploadAction = engine.UpdateArgument(argument, engine.GetDefaultQueue());
         engine.WaitForTransferAction(uploadAction);
 
         engine.ZeroBuffer(argument.GetId(), engine.GetDefaultQueue());
@@ -60,7 +60,7 @@ TEST_CASE("Working with OpenCL buffer", "OpenClEngine")
             ktt::ArgumentAccessType::ReadOnly, ktt::ArgumentMemoryType::Vector, ktt::ArgumentManagementType::Framework);
         charArgument.SetOwnedData(charData.data(), charData.size());
 
-        const auto uploadAction = engine.UploadArgument(charArgument, engine.GetDefaultQueue());
+        const auto uploadAction = engine.UpdateArgument(charArgument, engine.GetDefaultQueue());
         engine.WaitForTransferAction(uploadAction);
 
         engine.ZeroBuffer(charArgument.GetId(), engine.GetDefaultQueue());
