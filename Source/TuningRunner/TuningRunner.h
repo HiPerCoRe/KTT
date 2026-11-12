@@ -33,6 +33,7 @@ public:
     void SetRefinementParameters(const KernelId id, const RefinementParameters& parameters);
     void FinishExploration(const KernelId id);
     void ResumeExploration(const KernelId id);
+    void RepeatRefinement(const KernelId id);
     TuningPhase GetTuningPhase(const KernelId id) const;
     void InitializeConfigurationData(const Kernel& kernel);
     void ClearConfigurationData(const KernelId id, const bool clearSearcher = false);

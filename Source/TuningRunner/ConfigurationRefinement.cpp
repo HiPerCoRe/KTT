@@ -163,6 +163,40 @@ namespace ktt
         return results;
     }
 
+    bool ConfigurationRefinement::Restart()
+    {
+        const auto activeCount = std::count_if(m_Candidates.begin(), m_Candidates.end(), [](const auto& candidate) { return candidate.active; });
+
+        if (activeCount < 2)
+        {
+            return false;
+        }
+
+        for (auto& canditate : m_Candidates)
+        {
+            if (!canditate.active)
+            {
+                continue;
+            }
+
+            if (!canditate.refinementDurations.empty())
+            {
+                canditate.explorationDuration = PreciseMeasurementParameters::CalculateDuration(canditate.refinementDurations, DurationCalculationMethod::Median);
+            }
+
+            canditate.refinementDurations.clear();
+        }
+
+        m_CurrentRound = 0;
+        m_MovingForward = true;
+        m_Finished = false;
+        m_CurrentCandidateIndex = static_cast<size_t>
+            (std::distance(m_Candidates.begin(), std::find_if(m_Candidates.begin(), m_Candidates.end(), [](const auto& candidate) { return candidate.active; })));
+
+        Logger::LogInfo("Repeating refinement, Candidates: " + std::to_string(activeCount) + ", rounds: " + std::to_string(m_Parameters.rounds) + ".");
+        return true;
+    }
+
     void ConfigurationRefinement::Cancel()
     {
         m_Finished = true;

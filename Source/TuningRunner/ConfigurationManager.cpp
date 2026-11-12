@@ -51,6 +51,14 @@ void ConfigurationManager::ResumeExploration(const KernelId id)
     }
 }
 
+void ConfigurationManager::RepeatRefinement(const KernelId id)
+{
+    if (HasData(id))
+    {
+        m_ConfigurationData[id]->RepeatRefinement();
+    }
+}
+
 void ConfigurationManager::CancelRefinement(const KernelId id)
 {
     if (HasData(id))

@@ -299,6 +299,20 @@ void ConfigurationData::ResumeExploration()
     Logger::LogInfo("Resuming exploration for kernel " + m_Kernel.GetName());
 }
 
+void ConfigurationData::RepeatRefinement()
+{
+    if (GetPhase() != TuningPhase::Finished || m_Refinement == nullptr)
+    {
+        Logger::LogWarning("Refinement can be repeated only after a refinement has finished.");
+        return;
+    }
+
+    if (!m_Refinement->Restart())
+    {
+        Logger::LogWarning("Not enough candidates to repeat refinement for kernel " + m_Kernel.GetName());
+    }
+}
+
 void ConfigurationData::CancelRefinement()
 {
     if (GetPhase() != TuningPhase::Refinement)
@@ -341,9 +355,9 @@ KernelConfiguration ConfigurationData::GetCurrentConfiguration() const
 
 KernelConfiguration ConfigurationData::GetBestConfiguration() const
 {
-    if (GetPhase() == TuningPhase::Finished && m_Refinement && m_Refinement->IsFinished())
+    if (m_RefinementWinner.IsValid())
     {
-        return m_RefinementWinner.IsValid() ? m_RefinementWinner : m_BestConfiguration.first;
+        return m_RefinementWinner;
     }
 
     if (m_BestConfiguration.second != InvalidDuration)

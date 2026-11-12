@@ -881,34 +881,41 @@ public:
       */
     void SetProfileBasedSearcher(const KernelId id, const std::string& modelPath, const bool useBuiltinModule = true, const uint batchSize = 5, const uint neighborSize = 100, const uint randomSize = 10, const std::optional<uint64_t> seed = std::nullopt);
 
-  /** @fn void SetRefinementParameters(const KernelId id, const RefinementParameters& parameters)
-    * Sets refinement phase parameters for the specified kernel during dynamic tuning.
-    * Refinement is implicitly turned off,has to be called before tuning or else the previous configurations wont be taken in consideration.
-    * @param id Id of kernel for which the refinement parameters will be set.
-    * @param parameters Parameters controlling top candidates selection and repeated measurements.
-    */
-  void SetRefinementParameters(const KernelId id, const RefinementParameters& parameters);
+    /** @fn void SetRefinementParameters(const KernelId id, const RefinementParameters& parameters)
+      * Sets refinement phase parameters for the specified kernel during dynamic tuning.
+      * Refinement is implicitly turned off,has to be called before tuning or else the previous configurations wont be taken in consideration.
+      * @param id Id of kernel for which the refinement parameters will be set.
+      * @param parameters Parameters controlling top candidates selection and repeated measurements.
+      */
+    void SetRefinementParameters(const KernelId id, const RefinementParameters& parameters);
 
-  /** @fn void FinishExploration(const KernelId id)
-    * Ends the exploration phase for the specified kernel early and transitions to the refinement phase (if configured)
-    * or directly to the finished phase.
-    * @param id Id of kernel whose exploration phase will be finished.
-    */
-  void FinishExploration(const KernelId id);
+    /** @fn void FinishExploration(const KernelId id)
+      * Ends the exploration phase for the specified kernel early and transitions to the refinement phase (if configured)
+      * or directly to the finished phase.
+      * @param id Id of kernel whose exploration phase will be finished.
+      */
+    void FinishExploration(const KernelId id);
 
-  /** @fn void ResumeExploration(const KernelId id)
-  * Resumes exploration of the specified kernel after it was finished by FinishExploration. The refinement winner becomes
-  * the best configuration and only the refined candidates are kept for the next refinement.
-  * @param id Id of kernel whose exploration will be resumed.
-  */
-  void ResumeExploration(const KernelId id);
+    /** @fn void ResumeExploration(const KernelId id)
+      * Resumes exploration of the specified kernel after it was finished by FinishExploration. The refinement winner becomes
+      * the best configuration and only the refined candidates are kept for the next refinement.
+      * @param id Id of kernel whose exploration will be resumed.
+      */
+    void ResumeExploration(const KernelId id);
 
-  /** @fn TuningPhase GetTuningPhase(const KernelId id) const
-    * Returns the current dynamic tuning phase for the specified kernel.
-    * @param id Id of kernel for which the tuning phase will be retrieved.
-    * @return Current tuning phase of the specified kernel. See ::TuningPhase for more information.
-    */
-  TuningPhase GetTuningPhase(const KernelId id) const;
+    /** @fn void RepeatRefinement(const KernelId id)
+      * Repeats the last finished refinement of the specified kernel with the same candidates. Only new measurements are
+      * used to select the winner, the previous winner remains the best configuration until the refinement finishes.
+      * @param id Id of kernel whose refinement will be repeated.
+      */
+    void RepeatRefinement(const KernelId id);
+
+    /** @fn TuningPhase GetTuningPhase(const KernelId id) const
+      * Returns the current dynamic tuning phase for the specified kernel.
+      * @param id Id of kernel for which the tuning phase will be retrieved.
+      * @return Current tuning phase of the specified kernel. See ::TuningPhase for more information.
+      */
+    TuningPhase GetTuningPhase(const KernelId id) const;
 
     /** @fn void InitializeConfigurationData(const KernelId id)
       * Generates configuration space and initializes searcher for the specified kernel.

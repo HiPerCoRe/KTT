@@ -26,6 +26,8 @@ public:
 
     std::vector<std::pair<KernelConfiguration, Nanoseconds>> GetRefinedResults() const;
 
+    bool Restart();
+
     void Cancel();
 
 private:

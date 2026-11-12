@@ -320,6 +320,11 @@ void TunerCore::ResumeExploration(const KernelId id)
     m_TuningRunner->ResumeExploration(id);
 }
 
+void TunerCore::RepeatRefinement(const KernelId id)
+{
+    m_TuningRunner->RepeatRefinement(id);
+}
+
 TuningPhase TunerCore::GetTuningPhase(const KernelId id) const
 {
     return m_TuningRunner->GetTuningPhase(id);

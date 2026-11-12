@@ -30,6 +30,7 @@ public:
     void SetRefinementParameters(const KernelId id, const RefinementParameters& parameters);
     void FinishExploration(const KernelId id);
     void ResumeExploration(const KernelId id);
+    void RepeatRefinement(const KernelId id);
     void CancelRefinement(const KernelId id);
 
     bool HasData(const KernelId id) const;

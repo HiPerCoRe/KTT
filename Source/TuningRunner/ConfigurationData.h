@@ -47,6 +47,7 @@ public:
     TuningPhase GetPhase() const;
     void FinishExploration();
     void ResumeExploration();
+    void RepeatRefinement();
     void CancelRefinement();
     void SetRefinementParameters(const RefinementParameters& parameters);
 

@@ -712,6 +712,18 @@ void Tuner::ResumeExploration(const KernelId id)
     }
 }
 
+void Tuner::RepeatRefinement(const KernelId id)
+{
+    try
+    {
+        m_Tuner->RepeatRefinement(id);
+    }
+    catch (const KttException& exception)
+    {
+        TunerCore::Log(LoggingLevel::Error, exception.what());
+    }
+}
+
 TuningPhase Tuner::GetTuningPhase(const KernelId id) const
 {
     try
