@@ -725,6 +725,67 @@ void Tuner::SetProfileBasedSearcher([[maybe_unused]] const KernelId id, [[maybe_
     #endif // KTT_PYTHON
 }
 
+void Tuner::SetRefinementParameters(const KernelId id, const RefinementParameters& parameters)
+{
+    try
+    {
+        m_Tuner->SetRefinementParameters(id, parameters);
+    }
+    catch (const KttException& exception)
+    {
+        TunerCore::Log(LoggingLevel::Error, exception.what());
+    }
+}
+
+void Tuner::FinishExploration(const KernelId id)
+{
+    try
+    {
+        m_Tuner->FinishExploration(id);
+    }
+    catch (const KttException& exception)
+    {
+        TunerCore::Log(LoggingLevel::Error, exception.what());
+    }
+}
+
+void Tuner::ResumeExploration(const KernelId id)
+{
+    try
+    {
+        m_Tuner->ResumeExploration(id);
+    }
+    catch (const KttException& exception)
+    {
+        TunerCore::Log(LoggingLevel::Error, exception.what());
+    }
+}
+
+void Tuner::RepeatRefinement(const KernelId id)
+{
+    try
+    {
+        m_Tuner->RepeatRefinement(id);
+    }
+    catch (const KttException& exception)
+    {
+        TunerCore::Log(LoggingLevel::Error, exception.what());
+    }
+}
+
+TuningPhase Tuner::GetTuningPhase(const KernelId id) const
+{
+    try
+    {
+        return m_Tuner->GetTuningPhase(id);
+    }
+    catch (const KttException& exception)
+    {
+        TunerCore::Log(LoggingLevel::Error, exception.what());
+        return TuningPhase::Finished;
+    }
+}
+
 void Tuner::InitializeConfigurationData(const KernelId id)
 {
     try
