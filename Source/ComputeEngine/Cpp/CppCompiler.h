@@ -6,6 +6,8 @@
 #include <memory>
 #include <functional>
 
+#include <ComputeEngine/Cpp/CppKernelDefines.h>
+
 namespace ktt
 {
 
@@ -15,7 +17,8 @@ public:
     CppCompiler();
     ~CppCompiler();
 
-    using KernelFunction = std::function<void(const std::vector<void*>&, const std::vector<size_t>&)>;
+    using KernelFunction = std::function<void(const std::vector<void*>&, const std::vector<size_t>&,
+        const ScalarType*)>;
 
     // Compile kernel source and return a callable function.
     // kernelName: name of the kernel function in the source.

@@ -23,6 +23,96 @@
 namespace ktt
 {
 
+namespace
+{
+
+// Writes a scalar argument value into the union member that matches the argument's declared data
+// type. The kernel reads the same member, so this mapping must stay in sync with the member
+// documentation of ktt::ScalarType in ComputeEngine/Cpp/CppKernelDefines.h.
+ScalarType MakeScalarValue(const KernelArgument& argument)
+{
+    ScalarType result{};
+    const void* data = argument.GetData();
+    const size_t dataSize = argument.GetDataSize();
+
+    const auto requireMemberSize = [&argument, dataSize](const size_t memberSize)
+    {
+        if (dataSize != memberSize)
+        {
+            throw KttException("Scalar argument " + argument.GetId() + " has data size "
+                + std::to_string(dataSize) + ", which does not match the size of its data type ("
+                + std::to_string(memberSize) + ")");
+        }
+    };
+
+    if (data == nullptr && dataSize > 0)
+    {
+        throw KttException("Scalar argument " + argument.GetId() + " has no data");
+    }
+
+    switch (argument.GetDataType())
+    {
+    case ArgumentDataType::Char:
+        requireMemberSize(sizeof(result.Char));
+        std::memcpy(&result.Char, data, dataSize);
+        break;
+    case ArgumentDataType::UnsignedChar:
+        requireMemberSize(sizeof(result.UnsignedChar));
+        std::memcpy(&result.UnsignedChar, data, dataSize);
+        break;
+    case ArgumentDataType::Short:
+        requireMemberSize(sizeof(result.Short));
+        std::memcpy(&result.Short, data, dataSize);
+        break;
+    case ArgumentDataType::UnsignedShort:
+        requireMemberSize(sizeof(result.UnsignedShort));
+        std::memcpy(&result.UnsignedShort, data, dataSize);
+        break;
+    case ArgumentDataType::Int:
+        requireMemberSize(sizeof(result.Int));
+        std::memcpy(&result.Int, data, dataSize);
+        break;
+    case ArgumentDataType::UnsignedInt:
+        requireMemberSize(sizeof(result.UnsignedInt));
+        std::memcpy(&result.UnsignedInt, data, dataSize);
+        break;
+    case ArgumentDataType::Long:
+        requireMemberSize(sizeof(result.Long));
+        std::memcpy(&result.Long, data, dataSize);
+        break;
+    case ArgumentDataType::UnsignedLong:
+        requireMemberSize(sizeof(result.UnsignedLong));
+        std::memcpy(&result.UnsignedLong, data, dataSize);
+        break;
+    case ArgumentDataType::Half:
+        // Half has no native C++ type; the value is carried as the IEEE 754 binary16 bit pattern
+        // in UnsignedShort, which is also how the kernel documentation reads it back.
+        requireMemberSize(sizeof(result.UnsignedShort));
+        std::memcpy(&result.UnsignedShort, data, dataSize);
+        break;
+    case ArgumentDataType::Float:
+        requireMemberSize(sizeof(result.Float));
+        std::memcpy(&result.Float, data, dataSize);
+        break;
+    case ArgumentDataType::Double:
+        requireMemberSize(sizeof(result.Double));
+        std::memcpy(&result.Double, data, dataSize);
+        break;
+    default:
+        // Custom scalars have no representation in the ScalarType union; this also covers scalars
+        // whose data do not fit any union member. The previous backend silently passed a zero
+        // value for these, which produced wrong kernel results.
+        throw KttException("Scalar argument " + argument.GetId()
+            + " of custom data type is not supported by C++ backend");
+    }
+
+    return result;
+}
+
+static_assert(sizeof(ScalarType) == 8, "ScalarType must be able to hold a 64-bit scalar value");
+
+} // namespace
+
 CppEngine::CppEngine(const PlatformIndex platformIndex, const DeviceIndex deviceIndex, const uint32_t queueCount) :
     ComputeEngine(GlobalSizeType::OpenCL), // TODO: decide appropriate global size type for C++
     m_PlatformIndex(platformIndex),
@@ -97,7 +187,7 @@ ComputeActionId CppEngine::RunKernelAsync(const KernelComputeData& data, const Q
         timer.Start();
 
         // Execute kernel
-        kernel->function(kernel->argumentPointers, kernel->argumentSizes);
+        kernel->function(kernel->argumentPointers, kernel->argumentSizes, kernel->scalarValues.data());
 
         timer.Stop();
         ComputationResult result(kernelName);
@@ -112,7 +202,7 @@ ComputeActionId CppEngine::RunKernelAsync(const KernelComputeData& data, const Q
                 [&]() -> Nanoseconds {
                     Timer singleTimer;
                     singleTimer.Start();
-                    kernel->function(kernel->argumentPointers, kernel->argumentSizes);
+                    kernel->function(kernel->argumentPointers, kernel->argumentSizes, kernel->scalarValues.data());
                     singleTimer.Stop();
                     return singleTimer.GetElapsedTime();
                 },
@@ -790,16 +880,11 @@ void CppEngine::SetKernelArguments(CppKernel& kernel, const std::vector<KernelAr
             continue;
         }
 
-        // Handle scalar arguments - store their value directly
+        // Store the scalar value in the union member matching its declared data type. The sizes
+        // array carries buffer sizes only, scalars are passed through their own array.
         if (memoryType == ArgumentMemoryType::Scalar)
         {
-            size_t scalarValue = 0;
-            if (arg->GetDataSize() <= sizeof(size_t))
-            {
-                std::memcpy(&scalarValue, arg->GetData(), arg->GetDataSize());
-            }
-            kernel.scalarValues.push_back(scalarValue);
-            kernel.argumentSizes.push_back(scalarValue);
+            kernel.scalarValues.push_back(MakeScalarValue(*arg));
         }
         else
         {
