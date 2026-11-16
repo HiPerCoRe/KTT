@@ -243,7 +243,7 @@ public:
       * During the tuning process, tuner will generate configurations for combinations of kernel parameters and their values.
       * @param id Id of kernel for which the parameter will be added.
       * @param name Name of a parameter. Parameter names for a single kernel must be unique.
-      * @param values Optional allowed values for the parameter. Value type is a string. If left empty, parameter with be either
+      * @param values Optional allowed values for the parameter. Value type is a string. If left empty, parameter will be either
       * present without any value or completely excluded.
       * @param group Optional group inside which the parameter will be added. Tuning configurations are generated separately for each
       * group. This is useful when kernels contain groups of parameters that can be tuned independently. In this way, the total number
@@ -254,10 +254,10 @@ public:
 
     /** @fn void AddSeparateCompilerParameter(const KernelId id, const std::string& name, const std::vector<std::string>& values = {})
       * Works like AddCompilerParameter(), but compiler options added through this function, will be tuned separately (after standard tuning).
-      * These compiler optinos can be tuned with TuneOptions() function.
+      * These compiler options can be tuned with TuneOptions() function.
       * @param id Id of kernel for which the parameter will be added.
       * @param name Name of a parameter. Parameter names for a single kernel must be unique.
-      * @param values Optional allowed values for the parameter. Value type is a string. If left empty, parameter with be either
+      * @param values Optional allowed values for the parameter. Value type is a string. If left empty, parameter will be either
       * present without any value or completely excluded.
       */
     void AddSeparateCompilerParameter(const KernelId id, const std::string& name, const std::vector<std::string>& values = {});
@@ -299,7 +299,7 @@ public:
 
     /** @fn void AddScriptSeparateCompilerParameter(const KernelId id, const std::string& name, const ParameterValueType valueType,
       * const std::string& valueScript)
-      * Works similarily to AddScriptCompilerParameter(), but for compiler parameters that are tuned separately.
+      * Works similarly to AddScriptCompilerParameter(), but for compiler parameters that are tuned separately.
       * For standard tuning, only its first value will be used. Other values can be tuned with TuneOptions.
       * @param id Id of kernel for which the parameter will be added.
       * @param name Name of a parameter. Parameter names for a single kernel must be unique.
@@ -347,7 +347,7 @@ public:
     void AddThreadModifier(const KernelId id, const std::vector<KernelDefinitionId>& definitionIds, const ModifierType type,
         const ModifierDimension dimension, const std::string& parameter, const ModifierAction action);
 
-    /** @fn void void AddScriptThreadModifier(const KernelId id, const std::vector<KernelDefinitionId>& definitionIds,
+    /** @fn void AddScriptThreadModifier(const KernelId id, const std::vector<KernelDefinitionId>& definitionIds,
       * const ModifierType type, const ModifierDimension dimension, const std::string& script)
       * Adds thread modifier function for the specified kernel. Thread modifiers are useful in cases when kernel parameters affect
       * number of required kernel threads. If multiple thread modifiers are specified for the same type and dimension, they are applied
@@ -529,7 +529,7 @@ public:
       */
     void SaveArgumentVector(const ArgumentId& id, const std::string& filePath);
 
-    /** @fn template <typename T> ArgumentId AddArgumentScalar(const T& data, const ArgumentId& customId = "");
+    /** @fn template <typename T> ArgumentId AddArgumentScalar(const T& data, const ArgumentId& customId = "")
       * Adds new scalar argument to the tuner. All scalar arguments are read-only.
       * @param data Kernel argument data. The data type must be trivially copyable. Bool, reference or pointer types are not supported.
       * @param customId Custom argument id that can be specified instead of a default.
@@ -606,7 +606,7 @@ public:
     void SetWriteOnlyArgumentZero(const bool flag);
 
     /** @fn void UpdateBuffer(const ArgumentId& id)
-      * Updates data in the compute buffer of a specified vector argument. Same behavior as ComputeInterface::UpdateBuffer():
+      * Updates data in the compute buffer of a specified vector argument. Same behaviour as ComputeInterface::UpdateBuffer():
       * If the compute buffer of the argument does not exist yet, it is created and the data are uploaded into it.
       * If the buffer already exists, its content is replaced without any allocations.
       * Except: duration of this call is not counted towards kernel's total duration (as it would be in the ComputeInterface 
@@ -636,7 +636,7 @@ public:
       */
     void DownloadBuffer(const ArgumentId& id, void* destination, const size_t dataSize = 0);
 
-    /** @fn void ClearBuffer(const ArgumentId& id) = 0
+    /** @fn void ClearBuffer(const ArgumentId& id)
       * Removes compute buffer for the specified vector argument. This method should be used mainly with arguments with
       * ::ArgumentManagementType set to User.
       * Note that duration of this call is not counted towards kernel's total duration (as it would be in the ComputeInterface 
@@ -681,9 +681,9 @@ public:
     void SetProfiling(const bool flag);
 
     /** @fn bool GetProfiling()
-     * Returns whether profiling is switched on.
-     * @return true if KTT is set to collect profiling metrics, false otherwise.
-     */
+      * Returns whether profiling is switched on.
+      * @return true if KTT is set to collect profiling metrics, false otherwise.
+      */
     bool GetProfiling();
 
     /** @fn void SetValidationMethod(const ValidationMethod method, const double toleranceThreshold)
@@ -922,7 +922,7 @@ public:
       * @param modelPath Path to a ML model file containing trained model for the tuned kernel.
       * @param useBuiltinModule Toggles usage of built-in profile-based searcher module. If set to false, the built-in module will not be used,
       * making it possible to use externally modified version of module which is useful for debugging.
-      * @param batchSize number of configuration from which the fastest one is profiled. Default value also needs to be changed in TuningLoader/Commands/SearcherCommand.cpp
+      * @param batchSize number of configurations from which the fastest one is profiled. Default value also needs to be changed in TuningLoader/Commands/SearcherCommand.cpp
       * @param neighborSize number of neighboring configurations that are used for batch selection. Default value also needs to be changed in TuningLoader/Commands/SearcherCommand.cpp
       * @param randomSize number of random configurations that are used for batch selection. Default value also needs to be changed in TuningLoader/Commands/SearcherCommand.cpp
       * @param seed Optional seed for the source of randomness used by the searcher. See Searcher::SetSeed method for more information. Note that the seed
@@ -933,7 +933,7 @@ public:
 
     /** @fn void SetRefinementParameters(const KernelId id, const RefinementParameters& parameters)
       * Sets refinement phase parameters for the specified kernel during dynamic tuning.
-      * Refinement is implicitly turned off,has to be called before tuning or else the previous configurations wont be taken in consideration.
+      * Refinement is implicitly turned off, has to be called before tuning or else the previous configurations won't be taken inttoo consideration.
       * @param id Id of kernel for which the refinement parameters will be set.
       * @param parameters Parameters controlling top candidates selection and repeated measurements.
       */
@@ -1055,7 +1055,6 @@ public:
       * @param results Results which will be searched.
       */
     KernelResult GetBestResult(const std::vector<KernelResult>& results) const;
-
 
     /** @fn void SaveResults(const std::vector<KernelResult>& results, const std::string& filePath, const OutputFormat format,
       * const UserData& data = {}) const
@@ -1245,7 +1244,7 @@ public:
 
     /** @fn static void SetLoggingTarget(const std::string& filePath)
       * Sets the target for info messages logging to specified file. Default logging target is `std::clog`.
-      * @param filePath Path to file where tuner info messages will printed.
+      * @param filePath Path to file where tuner info messages will be printed.
       */
     static void SetLoggingTarget(const std::string& filePath);
 
