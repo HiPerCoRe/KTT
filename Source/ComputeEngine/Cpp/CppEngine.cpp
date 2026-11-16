@@ -53,50 +53,50 @@ ScalarType MakeScalarValue(const KernelArgument& argument)
     switch (argument.GetDataType())
     {
     case ArgumentDataType::Char:
-        requireMemberSize(sizeof(result.i8));
-        std::memcpy(&result.i8, data, dataSize);
+        requireMemberSize(sizeof(result.Char));
+        std::memcpy(&result.Char, data, dataSize);
         break;
     case ArgumentDataType::UnsignedChar:
-        requireMemberSize(sizeof(result.u8));
-        std::memcpy(&result.u8, data, dataSize);
+        requireMemberSize(sizeof(result.UnsignedChar));
+        std::memcpy(&result.UnsignedChar, data, dataSize);
         break;
     case ArgumentDataType::Short:
-        requireMemberSize(sizeof(result.i16));
-        std::memcpy(&result.i16, data, dataSize);
+        requireMemberSize(sizeof(result.Short));
+        std::memcpy(&result.Short, data, dataSize);
         break;
     case ArgumentDataType::UnsignedShort:
-        requireMemberSize(sizeof(result.u16));
-        std::memcpy(&result.u16, data, dataSize);
+        requireMemberSize(sizeof(result.UnsignedShort));
+        std::memcpy(&result.UnsignedShort, data, dataSize);
         break;
     case ArgumentDataType::Int:
-        requireMemberSize(sizeof(result.i32));
-        std::memcpy(&result.i32, data, dataSize);
+        requireMemberSize(sizeof(result.Int));
+        std::memcpy(&result.Int, data, dataSize);
         break;
     case ArgumentDataType::UnsignedInt:
-        requireMemberSize(sizeof(result.u32));
-        std::memcpy(&result.u32, data, dataSize);
+        requireMemberSize(sizeof(result.UnsignedInt));
+        std::memcpy(&result.UnsignedInt, data, dataSize);
         break;
     case ArgumentDataType::Long:
-        requireMemberSize(sizeof(result.i64));
-        std::memcpy(&result.i64, data, dataSize);
+        requireMemberSize(sizeof(result.Long));
+        std::memcpy(&result.Long, data, dataSize);
         break;
     case ArgumentDataType::UnsignedLong:
-        requireMemberSize(sizeof(result.u64));
-        std::memcpy(&result.u64, data, dataSize);
+        requireMemberSize(sizeof(result.UnsignedLong));
+        std::memcpy(&result.UnsignedLong, data, dataSize);
         break;
     case ArgumentDataType::Half:
         // Half has no native C++ type; the value is carried as the IEEE 754 binary16 bit pattern
-        // in u16, which is also how the kernel documentation reads it back.
-        requireMemberSize(sizeof(result.u16));
-        std::memcpy(&result.u16, data, dataSize);
+        // in UnsignedShort, which is also how the kernel documentation reads it back.
+        requireMemberSize(sizeof(result.UnsignedShort));
+        std::memcpy(&result.UnsignedShort, data, dataSize);
         break;
     case ArgumentDataType::Float:
-        requireMemberSize(sizeof(result.f));
-        std::memcpy(&result.f, data, dataSize);
+        requireMemberSize(sizeof(result.Float));
+        std::memcpy(&result.Float, data, dataSize);
         break;
     case ArgumentDataType::Double:
-        requireMemberSize(sizeof(result.d));
-        std::memcpy(&result.d, data, dataSize);
+        requireMemberSize(sizeof(result.Double));
+        std::memcpy(&result.Double, data, dataSize);
         break;
     default:
         // Custom scalars have no representation in the ScalarType union; this also covers scalars

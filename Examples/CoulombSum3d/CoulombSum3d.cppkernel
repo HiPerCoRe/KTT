@@ -22,9 +22,9 @@ extern "C" void directCoulombSum(void** buffers, size_t* bufferSizes, ktt::Scala
     float* atomInfoW = static_cast<float*>(buffers[4]);
     float* grid = static_cast<float*>(buffers[5]);
 
-    int atoms = scalarValues[0].i32;
-    float gridSpacing = scalarValues[1].f;
-    int gridSize = scalarValues[2].i32;
+    int atoms = scalarValues[0].Int;
+    float gridSpacing = scalarValues[1].Float;
+    int gridSize = scalarValues[2].Int;
 
 #if OMP_COLLAPSE == 0
   #if OMP_SCHEDULING == 0
