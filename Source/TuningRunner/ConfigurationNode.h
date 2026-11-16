@@ -26,6 +26,7 @@ public:
     size_t GetIndex() const;
     size_t GetChildrenCount() const;
     uint64_t GetConfigurationsCount() const;
+    const std::vector<std::unique_ptr<ConfigurationNode>>& GetChildren() const;
 
 private:
     std::vector<std::unique_ptr<ConfigurationNode>> m_Children;

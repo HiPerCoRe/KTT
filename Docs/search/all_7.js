@@ -9,10 +9,11 @@ var searchData=
   ['hasmemoryfrequencydata_6',['HasMemoryFrequencyData',['../classktt_1_1_computation_result.html#afa0b9cd57f3d8d95775f33c14158557e',1,'ktt::ComputationResult']]],
   ['haspowerdata_7',['HasPowerData',['../classktt_1_1_computation_result.html#a00b8f2897b78957563e27984404a954b',1,'ktt::ComputationResult']]],
   ['hasprofilingdata_8',['HasProfilingData',['../classktt_1_1_computation_result.html#a1df9421da7d98b039219703fd50367eb',1,'ktt::ComputationResult']]],
-  ['hasremainingprofilingruns_9',['hasremainingprofilingruns',['../classktt_1_1_computation_result.html#a32e32e26bcda0c6181d88a5ce1365850',1,'ktt::ComputationResult::HasRemainingProfilingRuns()'],['../classktt_1_1_kernel_result.html#a1fa061eaec6b9f756d59cd6c988f2e69',1,'ktt::KernelResult::HasRemainingProfilingRuns()'],['../classktt_1_1_kernel_profiling_data.html#a6515eaea540104d99c6c340070c3688b',1,'ktt::KernelProfilingData::HasRemainingProfilingRuns()']]],
+  ['hasremainingprofilingruns_9',['hasremainingprofilingruns',['../classktt_1_1_kernel_profiling_data.html#a6515eaea540104d99c6c340070c3688b',1,'ktt::KernelProfilingData::HasRemainingProfilingRuns()'],['../classktt_1_1_kernel_result.html#a1fa061eaec6b9f756d59cd6c988f2e69',1,'ktt::KernelResult::HasRemainingProfilingRuns()'],['../classktt_1_1_computation_result.html#a32e32e26bcda0c6181d88a5ce1365850',1,'ktt::ComputationResult::HasRemainingProfilingRuns()']]],
   ['hassamevalue_10',['HasSameValue',['../classktt_1_1_parameter_pair.html#a63d30900d44bcba18d0bbc29f0bea9ac',1,'ktt::ParameterPair']]],
-  ['hassmfrequencydata_11',['HasSMFrequencyData',['../classktt_1_1_computation_result.html#aa997cf5f621e11d814efa5875f81bf99',1,'ktt::ComputationResult']]],
-  ['hastemperaturedata_12',['HasTemperatureData',['../classktt_1_1_computation_result.html#a4f3484444e6456a3d87164b908c00716',1,'ktt::ComputationResult']]],
-  ['host_13',['Host',['../namespacektt.html#ac355e7acb6c66ab83a0238f94d880f62ac2ca16d048ec66e04bca283eab048ec2',1,'ktt']]],
-  ['hostzerocopy_14',['HostZeroCopy',['../namespacektt.html#ac355e7acb6c66ab83a0238f94d880f62a752a38606c366e4718d76c6f40c0cd7d',1,'ktt']]]
+  ['hasseed_11',['HasSeed',['../classktt_1_1_searcher.html#a5844bd4eb30a43b7e8b4c8c73a7c2a37',1,'ktt::Searcher']]],
+  ['hassmfrequencydata_12',['HasSMFrequencyData',['../classktt_1_1_computation_result.html#aa997cf5f621e11d814efa5875f81bf99',1,'ktt::ComputationResult']]],
+  ['hastemperaturedata_13',['HasTemperatureData',['../classktt_1_1_computation_result.html#a4f3484444e6456a3d87164b908c00716',1,'ktt::ComputationResult']]],
+  ['host_14',['Host',['../namespacektt.html#ac355e7acb6c66ab83a0238f94d880f62ac2ca16d048ec66e04bca283eab048ec2',1,'ktt']]],
+  ['hostzerocopy_15',['HostZeroCopy',['../namespacektt.html#ac355e7acb6c66ab83a0238f94d880f62a752a38606c366e4718d76c6f40c0cd7d',1,'ktt']]]
 ];

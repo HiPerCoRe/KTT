@@ -16,7 +16,12 @@
 #include <Api/StopCondition/UnionCondition.h>
 #include <Api/StopCondition/FailureCount.h>
 #include <Api/StopCondition/FailureFraction.h>
+#include <Api/StopCondition/InterruptSignal.h>
 
 #include <Api/ComputeInterface.h>
 
 #include <Api/Configuration/PreciseMeasurementParameters.h>
+
+#ifdef KTT_DATABASE
+#include <Database/Database.h>
+#endif

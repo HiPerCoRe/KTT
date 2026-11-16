@@ -725,6 +725,67 @@ void Tuner::SetProfileBasedSearcher([[maybe_unused]] const KernelId id, [[maybe_
     #endif // KTT_PYTHON
 }
 
+void Tuner::SetRefinementParameters(const KernelId id, const RefinementParameters& parameters)
+{
+    try
+    {
+        m_Tuner->SetRefinementParameters(id, parameters);
+    }
+    catch (const KttException& exception)
+    {
+        TunerCore::Log(LoggingLevel::Error, exception.what());
+    }
+}
+
+void Tuner::FinishExploration(const KernelId id)
+{
+    try
+    {
+        m_Tuner->FinishExploration(id);
+    }
+    catch (const KttException& exception)
+    {
+        TunerCore::Log(LoggingLevel::Error, exception.what());
+    }
+}
+
+void Tuner::ResumeExploration(const KernelId id)
+{
+    try
+    {
+        m_Tuner->ResumeExploration(id);
+    }
+    catch (const KttException& exception)
+    {
+        TunerCore::Log(LoggingLevel::Error, exception.what());
+    }
+}
+
+void Tuner::RepeatRefinement(const KernelId id)
+{
+    try
+    {
+        m_Tuner->RepeatRefinement(id);
+    }
+    catch (const KttException& exception)
+    {
+        TunerCore::Log(LoggingLevel::Error, exception.what());
+    }
+}
+
+TuningPhase Tuner::GetTuningPhase(const KernelId id) const
+{
+    try
+    {
+        return m_Tuner->GetTuningPhase(id);
+    }
+    catch (const KttException& exception)
+    {
+        TunerCore::Log(LoggingLevel::Error, exception.what());
+        return TuningPhase::Finished;
+    }
+}
+
 void Tuner::InitializeConfigurationData(const KernelId id)
 {
     try
@@ -821,13 +882,26 @@ std::string Tuner::GetKernelDefinitionSource(const KernelDefinitionId id, const 
     }
 }
 
+ktt::db::TuningInfo Tuner::GetDatabaseTuningInfo(const KernelId id) const
+{
+    try
+    {
+        return m_Tuner->GetDatabaseTuningInfo(id);
+    }
+    catch (const KttException& exception)
+    {
+        TunerCore::Log(LoggingLevel::Error, exception.what());
+        return ktt::db::TuningInfo();
+    }
+}
+
 void Tuner::SetTimeUnit(const TimeUnit unit)
 {
     TunerCore::SetTimeUnit(unit);
 }
 
 KernelResult Tuner::GetBestResult(const std::vector<KernelResult>& results) const
-{   
+{
     try
     {
         return m_Tuner->GetBestResult(results);

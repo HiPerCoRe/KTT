@@ -5,6 +5,7 @@
 #include <string>
 
 #include <Api/ComputeApiInitializer.h>
+#include <Api/Info/DatabaseTuningInfo.h>
 #include <ComputeEngine/ComputeApi.h>
 #include <ComputeEngine/ComputeEngine.h>
 #include <Kernel/KernelManager.h>
@@ -16,6 +17,8 @@
 #include <TuningRunner/TuningRunner.h>
 #include <Utility/Logger/LoggingLevel.h>
 #include <KttTypes.h>
+#include <Api/Configuration/RefinementParameters.h>
+#include <Api/Configuration/TuningPhase.h>
 
 namespace ktt
 {
@@ -100,6 +103,11 @@ public:
     std::vector<KernelResult> SimulateKernelTuning(const KernelId id, const std::vector<KernelResult>& results,
         std::unique_ptr<StopCondition> stopCondition);
     void SetSearcher(const KernelId id, std::unique_ptr<Searcher> searcher);
+    void SetRefinementParameters(const KernelId id, const RefinementParameters& parameters);
+    void FinishExploration(const KernelId id);
+    void ResumeExploration(const KernelId id);
+    void RepeatRefinement(const KernelId id);
+    TuningPhase GetTuningPhase(const KernelId id) const;
     void InitializeConfigurationData(const KernelId id);
     void ClearConfigurationData(const KernelId id);
     uint64_t GetConfigurationsCount(const KernelId id) const;
@@ -108,6 +116,7 @@ public:
     std::string GetKernelSource(const KernelId id, const KernelConfiguration& configuration) const;
     std::string GetKernelDefinitionSource(const KernelDefinitionId id, const KernelConfiguration& configuration) const;
     KernelResult GetBestResult(const std::vector<KernelResult>& results) const;
+    ktt::db::TuningInfo GetDatabaseTuningInfo(const KernelId id) const;
 
     // Result printing
     static void SetTimeUnit(const TimeUnit unit);

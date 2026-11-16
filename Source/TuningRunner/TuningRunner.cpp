@@ -48,7 +48,7 @@ std::vector<KernelResult> TuningRunner::Tune(const Kernel& kernel, const KernelD
     std::vector<KernelResult> results;
 //    KernelResult result(kernel.GetName(), m_ConfigurationManager->GetCurrentConfiguration(id));
 
-    while (!m_ConfigurationManager->IsDataProcessed(id))
+    while (m_ConfigurationManager->GetTuningPhase(id) == TuningPhase::Exploration)
     {
         KernelResult result(kernel.GetName(), m_ConfigurationManager->GetCurrentConfiguration(id), "");
         KernelResult multiResult(kernel.GetName(), m_ConfigurationManager->GetCurrentConfiguration(id), ktt::Timestamp::GetTimestamp());
@@ -92,6 +92,13 @@ std::vector<KernelResult> TuningRunner::Tune(const Kernel& kernel, const KernelD
         }
     }
 
+    if (m_ConfigurationManager->GetTuningPhase(id) == TuningPhase::Refinement)
+    {
+        Logger::LogWarning("Refinement is supported only in dynamic tuning (TuneIteration), skipping it in "
+            + tuningMode + " tuning for kernel " + kernel.GetName());
+        m_ConfigurationManager->CancelRefinement(id);
+    }
+
     Logger::LogInfo("Ending " + tuningMode + " tuning for kernel " + kernel.GetName() + ", total number of tested configurations is "
         + std::to_string(results.size()));
     m_KernelRunner.ClearReferenceResult(kernel);
@@ -115,11 +122,23 @@ KernelResult TuningRunner::TuneIteration(const Kernel& kernel, const KernelDimen
     }
 
     KernelConfiguration configuration;
+    const TuningPhase currentPhase = m_ConfigurationManager->GetTuningPhase(id);
 
-    if (m_ConfigurationManager->IsDataProcessed(id))
+    if (currentPhase == TuningPhase::Finished)
     {
         configuration = m_ConfigurationManager->GetBestConfiguration(id);
         Logger::LogInfo("Launching the best configuration for kernel " + kernel.GetName());
+    }
+    else if (currentPhase == TuningPhase::Refinement)
+    {
+        configuration = m_ConfigurationManager->GetCurrentConfiguration(id);
+        Logger::LogInfo("Launching candidate configuration in refinement phase for kernel " + kernel.GetName());
+
+        if (m_KernelRunner.IsProfilingActive())
+        {
+            Logger::LogWarning("Profiling is forcibly disabled during the refinement phase.");
+            m_KernelRunner.SetProfiling(false);
+        }
     }
     else
     {
@@ -136,7 +155,7 @@ KernelResult TuningRunner::TuneIteration(const Kernel& kernel, const KernelDimen
 
     KernelResult result = m_KernelRunner.RunKernel(kernel, configuration, dimensions, mode, output, true);
 
-    if (mode != KernelRunMode::OfflineTuning && !result.HasRemainingProfilingRuns() && !m_ConfigurationManager->IsDataProcessed(id))
+    if (mode != KernelRunMode::OfflineTuning && !result.HasRemainingProfilingRuns() && currentPhase != TuningPhase::Finished)
     {
         const Nanoseconds searcherOverhead = RunScopeTimer([this, id, &result]()
         {
@@ -169,7 +188,7 @@ std::vector<KernelResult> TuningRunner::SimulateTuning(const Kernel& kernel, con
         stopCondition->Initialize(configurationCount);
     }
 
-    while (!m_ConfigurationManager->IsDataProcessed(id))
+    while (m_ConfigurationManager->GetTuningPhase(id) == TuningPhase::Exploration)
     {
         if (stopCondition != nullptr && stopCondition->IsFulfilled())
         {
@@ -215,6 +234,12 @@ std::vector<KernelResult> TuningRunner::SimulateTuning(const Kernel& kernel, con
         }
     }
 
+    if (m_ConfigurationManager->GetTuningPhase(id) == TuningPhase::Refinement)
+    {
+        Logger::LogWarning("Refinement is supported only in dynamic tuning (TuneIteration), skipping it in simulated tuning for kernel " + kernel.GetName());
+        m_ConfigurationManager->CancelRefinement(id);
+    }
+
     Logger::LogInfo("Ending simulated tuning for kernel " + kernel.GetName() + ", total number of tested configurations is "
         + std::to_string(passedIterations));
     m_ConfigurationManager->ClearData(id);
@@ -224,6 +249,31 @@ std::vector<KernelResult> TuningRunner::SimulateTuning(const Kernel& kernel, con
 void TuningRunner::SetSearcher(const KernelId id, std::unique_ptr<Searcher> searcher)
 {
     m_ConfigurationManager->SetSearcher(id, std::move(searcher));
+}
+
+void TuningRunner::SetRefinementParameters(const KernelId id, const RefinementParameters& parameters)
+{
+    m_ConfigurationManager->SetRefinementParameters(id, parameters);
+}
+
+void TuningRunner::FinishExploration(const KernelId id)
+{
+    m_ConfigurationManager->FinishExploration(id);
+}
+
+void TuningRunner::ResumeExploration(const KernelId id)
+{
+    m_ConfigurationManager->ResumeExploration(id);
+}
+
+void TuningRunner::RepeatRefinement(const KernelId id)
+{
+    m_ConfigurationManager->RepeatRefinement(id);
+}
+
+TuningPhase TuningRunner::GetTuningPhase(const KernelId id) const
+{
+    return m_ConfigurationManager->GetTuningPhase(id);
 }
 
 void TuningRunner::InitializeConfigurationData(const Kernel& kernel)
@@ -244,6 +294,17 @@ uint64_t TuningRunner::GetConfigurationsCount(const KernelId id) const
 KernelConfiguration TuningRunner::GetBestConfiguration(const KernelId id) const
 {
     return m_ConfigurationManager->GetBestConfiguration(id);
+}
+
+size_t TuningRunner::GetConfigurationFingerprint(const Kernel& kernel) const
+{
+    const auto id = kernel.GetId();
+    if (!m_ConfigurationManager->HasData(id))
+    {
+        m_ConfigurationManager->InitializeData(kernel);
+    }
+
+    return m_ConfigurationManager->GetConfigurationFingerprint(id);
 }
 
 const KernelResult& TuningRunner::FindMatchingResult(const std::vector<KernelResult>& results,

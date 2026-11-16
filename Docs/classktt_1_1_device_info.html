@@ -112,6 +112,8 @@ Public Member Functions</h2></td></tr>
 <tr class="separator:abcd75553d8ad9dcf723ba5ecb834313f"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a5d2cd6fc287fd4ba033c02482a3123c0" id="r_a5d2cd6fc287fd4ba033c02482a3123c0"><td class="memItemLeft" align="right" valign="top">const std::string &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classktt_1_1_device_info.html#a5d2cd6fc287fd4ba033c02482a3123c0">GetName</a> () const</td></tr>
 <tr class="separator:a5d2cd6fc287fd4ba033c02482a3123c0"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a261fcf6445be7df8ce17b28f5eab98f2" id="r_a261fcf6445be7df8ce17b28f5eab98f2"><td class="memItemLeft" align="right" valign="top">const std::string &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classktt_1_1_device_info.html#a261fcf6445be7df8ce17b28f5eab98f2">GetDeviceIdentifier</a> () const</td></tr>
+<tr class="separator:a261fcf6445be7df8ce17b28f5eab98f2"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a36bf9ec1e6410e5e1dac84e87165b4e5" id="r_a36bf9ec1e6410e5e1dac84e87165b4e5"><td class="memItemLeft" align="right" valign="top">const std::string &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classktt_1_1_device_info.html#a36bf9ec1e6410e5e1dac84e87165b4e5">GetVendor</a> () const</td></tr>
 <tr class="separator:a36bf9ec1e6410e5e1dac84e87165b4e5"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a1c4ac471ce324ce40e8dbbc5b262ec72" id="r_a1c4ac471ce324ce40e8dbbc5b262ec72"><td class="memItemLeft" align="right" valign="top">const std::string &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classktt_1_1_device_info.html#a1c4ac471ce324ce40e8dbbc5b262ec72">GetExtensions</a> () const</td></tr>
@@ -138,6 +140,8 @@ Public Member Functions</h2></td></tr>
 <tr class="separator:ae3854df8444dbb599cb6bc5e533c6c78"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a05e071b6d35a78281006ef47be4a7d9d" id="r_a05e071b6d35a78281006ef47be4a7d9d"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classktt_1_1_device_info.html#a05e071b6d35a78281006ef47be4a7d9d">SetVendor</a> (const std::string &amp;vendor)</td></tr>
 <tr class="separator:a05e071b6d35a78281006ef47be4a7d9d"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a014c9c479aac8e2ad4a709bfa76a087f" id="r_a014c9c479aac8e2ad4a709bfa76a087f"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classktt_1_1_device_info.html#a014c9c479aac8e2ad4a709bfa76a087f">SetDeviceIdentifier</a> (const std::string &amp;deviceIdentifier)</td></tr>
+<tr class="separator:a014c9c479aac8e2ad4a709bfa76a087f"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a6242a7047532cbc7d47a9417bd60b0b8" id="r_a6242a7047532cbc7d47a9417bd60b0b8"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classktt_1_1_device_info.html#a6242a7047532cbc7d47a9417bd60b0b8">SetExtensions</a> (const std::string &amp;extensions)</td></tr>
 <tr class="separator:a6242a7047532cbc7d47a9417bd60b0b8"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a31ad37db18d4241525454239b4a1bd00" id="r_a31ad37db18d4241525454239b4a1bd00"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classktt_1_1_device_info.html#a31ad37db18d4241525454239b4a1bd00">SetDeviceType</a> (const <a class="el" href="namespacektt.html#a615cf89b27d4d1f734af56573e5c2e01">DeviceType</a> deviceType)</td></tr>
@@ -237,6 +241,24 @@ Public Member Functions</h2></td></tr>
       </table>
 </div><div class="memdoc">
 <p>Getter for CUDA compute capability minor. </p><dl class="section return"><dt>Returns</dt><dd>Minor compute capability of NVIDIA GPUs with CUDA compute API, zero otherwise. </dd></dl>
+
+</div>
+</div>
+<a id="a261fcf6445be7df8ce17b28f5eab98f2" name="a261fcf6445be7df8ce17b28f5eab98f2"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a261fcf6445be7df8ce17b28f5eab98f2">&#9670;&#160;</a></span>GetDeviceIdentifier()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">const std::string &amp; ktt::DeviceInfo::GetDeviceIdentifier </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td> const</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Getter for the persistent hardware identifier of the device retrieved from the compute API (e.g. the CUDA / OpenCL / Vulkan device UUID). Unlike the KTT-assigned index, this value uniquely identifies the physical device across machines and runs. Empty when the compute API does not expose such an identifier. </p><dl class="section return"><dt>Returns</dt><dd>Persistent hardware identifier of the device, or an empty string when unavailable. </dd></dl>
 
 </div>
 </div>
@@ -498,6 +520,30 @@ Public Member Functions</h2></td></tr>
 <p>Setter for CUDA compute capability minor. </p><dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramname">capabilityMinor</td><td>Minor compute capability of NVIDIA GPUs with CUDA compute API, zero otherwise. </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
+<a id="a014c9c479aac8e2ad4a709bfa76a087f" name="a014c9c479aac8e2ad4a709bfa76a087f"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a014c9c479aac8e2ad4a709bfa76a087f">&#9670;&#160;</a></span>SetDeviceIdentifier()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void ktt::DeviceInfo::SetDeviceIdentifier </td>
+          <td>(</td>
+          <td class="paramtype">const std::string &amp;&#160;</td>
+          <td class="paramname"><em>deviceIdentifier</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Setter for the persistent hardware identifier of the device. </p><dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">deviceIdentifier</td><td>Persistent hardware identifier of the device. </td></tr>
   </table>
   </dd>
 </dl>

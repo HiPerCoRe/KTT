@@ -10,7 +10,7 @@ namespace ktt
 /** @class InterruptSignal
   * Class which implements a stop condition based on listening for
   * SIGINT. */
-class InterruptSignal : public StopCondition
+class KTT_API InterruptSignal : public StopCondition
 {
 public:
     InterruptSignal() = default;

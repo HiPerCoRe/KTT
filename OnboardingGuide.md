@@ -238,11 +238,19 @@ const ktt::ArgumentId lvalueId = tuner.AddArgumentScalar(lvalueScalar);
 const ktt::ArgumentId rvalueId = tuner.AddArgumentScalar(34);
 ```
 
+Due to being copies managed by KTT, scalar arguments have to be updated manually, either through the tuner:
+```cpp
+const float newValue = 3.1f
+tuner.UpdateScalarArgument(scalarId, &newValue)
+```
+or through a kernel launcher, which we will discuss later.
+
 #### Vector arguments
 
 Vector arguments have more customization options available than scalars. Other than the initial data, it is possible to specify whether an argument
-is used for reading or writing. For read-only arguments, additional optimization is possible during offline tuning. Since their contents do not
-change, the buffers must be copied into memory only once before the first kernel configuration is launched and remain the same for subsequent
+is used for reading or writing. For read-only arguments, additional optimization is possible during offline tuning. Since the tuned kernel does not change their contents 
+(they can still be updated with Tuner::UpdateBuffer, but that is only relevant for kernel running or dynamic tuning, which we will discuss later),
+the buffers can be copied into memory only once before the first kernel configuration is launched and remains the same for subsequent
 configurations. Setting correct access types to arguments can therefore lead to better tuning performance.
 
 Next, it is possible to decide the memory location from which a kernel accesses the argument buffer. The two main options are host memory and device
@@ -253,7 +261,9 @@ Unified memory buffers can be accessed from both host and kernel sides, relying 
 
 Management type option specifies whether buffer management is handled automatically by the tuner (e.g., write arguments are automatically reset
 to initial state before a new kernel configuration is launched, buffers are created and deleted automatically) or by the user. In some advanced cases,
-users may wish to manage the buffers manually. Note, however, that this requires the usage of kernel launchers which we will discuss later.
+users may wish to manage the buffers manually. This can be done through Tuner
+methods like UpdateBuffer, DownloadBuffer, and ClearBuffer. Alternatively,
+it is possible to use a kernel launcher, which we will discuss later.
 
 The final option for vector arguments is whether the initial data provided by the user should be copied inside the tuner or referenced directly. Note that 
 this is a different option than the memory location of data accessed by the kernel - KTT can make its private copy of provided buffer and then copy it to the 
