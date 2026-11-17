@@ -1,6 +1,7 @@
 #include <catch.hpp>
 
-#if defined(KTT_REMOTE_DATABASE)
+// Needs both databases: built with --database and --remote-database.
+#if defined(KTT_REMOTE_DATABASE) && defined(KTT_DATABASE)
 
 // R8.2: the same saves and reads on the local Database and on a RemoteDatabase backed by an in-memory fake ktt-db
 // server must give the same answers.
@@ -14,7 +15,7 @@
 #include <vector>
 
 #include <Api/KttException.h>
-#include <Database/Database.h>
+#include <Database/Local/Database.h>
 #include <Database/Remote/RemoteDatabase.h>
 #include <Database/Utility/TimeUnitGuard.h>
 
@@ -33,9 +34,9 @@ namespace
 
 struct Pair
 {
-    std::shared_ptr<FakeKttDbServer> server = std::make_shared<FakeKttDbServer>();
+    std::shared_ptr<FakeKttDbServer> server = std::make_shared<FakeKttDbServer>(ktt::db::RemoteDatabase::GetHost());
     ktt::db::Database local{std::filesystem::path(":memory:")};
-    ktt::db::RemoteDatabase remote{"http://ktt-db.test", "kttak-parity", {}, server};
+    ktt::db::RemoteDatabase remote{"kttak-parity", {}, server};
 
     std::vector<const IDatabase *> Both() const
     {
@@ -316,4 +317,4 @@ TEST_CASE("Remote and local reject the same invalid input", "[Database][Remote][
     REQUIRE(pair.server->RequestCount() == 0);
 }
 
-#endif // KTT_REMOTE_DATABASE
+#endif // KTT_REMOTE_DATABASE && KTT_DATABASE

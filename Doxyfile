@@ -901,14 +901,20 @@ INPUT                  = Readme.md \
                          Source/Utility/Logger/LoggingLevel.h \
                          Source/Kernel/ParameterValueType.h \
                          Database/Database \
-                         Database/Database/Repository \
-                         Database/Database/Repository/Device \
-                         Database/Database/Repository/Result \
-                         Database/Database/Repository/Run \
-                         Database/Database/Repository/Source \
-                         Database/Database/Repository/Space \
-                         Database/Database/Schema \
-                         Database/Database/Utility
+                         Database/Database/Utility \
+                         Database/Database/Local \
+                         Database/Database/Local/Repository/Device \
+                         Database/Database/Local/Repository/Result \
+                         Database/Database/Local/Repository/Run \
+                         Database/Database/Local/Repository/Source \
+                         Database/Database/Local/Repository/Space \
+                         Database/Database/Local/Repository/Tuner \
+                         Database/Database/Local/Schema \
+                         Database/Database/Local/Utility \
+                         Database/Database/Remote \
+                         Database/Database/Remote/Http \
+                         Database/Database/Remote/Utility \
+                         Database/Database/Remote/Utility/Wire
 
 # This tag can be used to specify the character encoding of the source files
 # that doxygen parses. Internally doxygen uses the UTF-8 encoding. Doxygen uses

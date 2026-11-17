@@ -21,7 +21,7 @@
 
 #include <Api/KttException.h>
 #include <Database/Remote/RemoteDatabase.h>
-#include <Database/Remote/RemoteDatabaseInternal.h>
+#include <Database/Remote/Utility/RemoteInternal.h>
 #include <Utility/Logger/Logger.h>
 
 #include "../DatabaseTestHelpers.h"
@@ -47,7 +47,7 @@ namespace
 {
 
 const std::string ApiKey = "kttak-secret-test-key";
-const std::string BaseUrl = "https://ktt.example.org";
+const std::string BaseUrl = RemoteDatabase::GetHost();
 const std::string AppUrl = BaseUrl + "/ktt-db/app";
 const std::string Operation = "RemoteDatabase::SaveSourceCode";
 
@@ -74,7 +74,7 @@ struct Fixture
         RemoteDatabaseOptions options;
         options.maxRetries = maxRetries;
         options.sourceCodeProvider = std::move(provider);
-        return RemoteDatabase(BaseUrl, ApiKey, options, http);
+        return RemoteDatabase(ApiKey, options, http);
     }
 
     std::vector<RecordedRequest> Requests() const
@@ -424,9 +424,9 @@ TEST_CASE("SaveSourceCode is retried after a 503", "[Database][Remote][SourceCod
 TEST_CASE("The source fingerprint of SaveSourceCode is the one of the test vectors", "[Database][Remote][SourceCode]")
 {
 #if defined(_MSC_VER)
-    std::ifstream file("../Tests/Database/SourceFingerprintVectors.json");
+    std::ifstream file("../Tests/Database/Utility/SourceFingerprintVectors.json");
 #else
-    std::ifstream file("../../Tests/Database/SourceFingerprintVectors.json");
+    std::ifstream file("../../Tests/Database/Utility/SourceFingerprintVectors.json");
 #endif
     REQUIRE(file.is_open());
     const json vectors = json::parse(file);

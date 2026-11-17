@@ -2,7 +2,9 @@
 
 This walks through how `ktt::db::Database` is actually used, following the
 end-to-end example in
-[/Examples/CoulombSum3dDatabase/CoulombSum3dDatabase.cpp](Examples/CoulombSum3dDatabase/CoulombSum3dDatabase.cpp).
+[/Examples/Database/CoulombSum3dLocal/CoulombSum3dLocal.cpp](../Examples/Database/CoulombSum3dLocal/CoulombSum3dLocal.cpp).
+The kernel, data and tuning space it shares with the remote variant are in
+[/Examples/Database/Common/CoulombSum3dDatabaseExample.h](../Examples/Database/Common/CoulombSum3dDatabaseExample.h).
 
 All database interaction lives in that example's `Run()` method. The snippets
 below are grouped by usage — each is an independent operation, not a required
@@ -37,18 +39,25 @@ const ktt::db::Database db;
 For a custom location, pass a filesystem path instead; an already-open
 `sqlite3` connection can also be adopted.
 
-Not exercised by the example: to store the results on a ktt-db server instead,
-build with `--remote-database` and open a `RemoteDatabase` with the server URL
-and an API key from the web app's settings (the key decides the realms; see
-[README.md](README.md#remote-database)). The rest of the example works the same
+Shown in the remote variant,
+[/Examples/Database/CoulombSum3dRemote/CoulombSum3dRemote.cpp](../Examples/Database/CoulombSum3dRemote/CoulombSum3dRemote.cpp)
+(it also uses `GetStatsForSource`, the remote-only `QueryResults` and the source code upload): to store the results on a ktt-db server instead,
+build with `--remote-database` and open a `RemoteDatabase` with an API key from
+the web app's settings, given by the application or read from the file `api-key`
+next to the default local database. The server is fixed at build time
+(`--remote-database-host`, default `https://localhost:8888`). The key decides the realms; see
+[README.md](README.md#remote-database). The rest of the example works the same
 with it, apart from the differences listed there (for example, `SyncFrom` is
 local only, and a limit above 1000 throws).
 
 ```cpp
 #include <Database/Remote/RemoteDatabase.h>
 
-const char* apiKey = std::getenv("KTT_DB_API_KEY");   // keep the key out of the source code
-const ktt::db::RemoteDatabase db("https://ktt.example.org", apiKey != nullptr ? apiKey : "");   // throws if empty
+const ktt::db::RemoteDatabase db;   // reads ~/.local/share/ktt/api-key (throws if it is missing or empty)
+
+// or, with the key from the application (keep it out of the source code):
+const char* apiKey = std::getenv("KTT_DB_API_KEY");
+const ktt::db::RemoteDatabase db2(apiKey != nullptr ? apiKey : "");   // throws if empty
 ```
 
 Both classes implement `ktt::db::IDatabase`, so a function that takes a
@@ -176,7 +185,7 @@ if (!m_dbSyncPath.empty())
 
 ## Public API reference
 
-From [Database/Database.h](Database/Database.h):
+From [Database/Local/Database.h](Database/Local/Database.h):
 
 | Method | Purpose |
 | --- | --- |
@@ -196,7 +205,7 @@ From [Database/Database.h](Database/Database.h):
 
 | Method | Purpose |
 | --- | --- |
-| `RemoteDatabase(baseUrl, apiKey, options = {})` | Client for a ktt-db server; does not contact it. `RemoteDatabaseOptions` sets timeouts, retries and TLS. |
+| `RemoteDatabase(options = {})`, `RemoteDatabase(apiKey, options = {})` | Client for the ktt-db server fixed at build time (`GetHost()`); the first reads the API key from the key file (`GetDefaultApiKeyPath()`). Does not contact the server. `RemoteDatabaseOptions` sets timeouts, retries and TLS. |
 | `SaveResults`, `SimpleGetBestResults`, `GetBestResults`, `GetStatsForSource` | As for `Database`, on the server; the differences are listed in [README.md](README.md#remote-database). |
 | `QueryResults(query)` | Remote only: one page of the results matching a filter over everything the API key can see, with run, device and source; see [README.md](README.md#result-query-remote-only). |
 | `SaveSourceCode(sourceFingerprint, definitions)` | Upload the kernel source code for the web app (from `Tuner::GetKernelSources`); `true` if stored now, `false` if the server had it. See [README.md](README.md#kernel-source-code). |

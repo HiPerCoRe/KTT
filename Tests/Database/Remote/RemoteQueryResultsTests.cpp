@@ -17,7 +17,7 @@
 
 #include <Api/KttException.h>
 #include <Database/Remote/RemoteDatabase.h>
-#include <Database/Repository/Utility.h>
+#include <Database/Utility/ResultSerialization.h>
 #include <Database/Utility/TimeUnitGuard.h>
 #include <Database/Utility/Uuid.h>
 #include <Output/TimeConfiguration/TimeConfiguration.h>
@@ -40,7 +40,7 @@ namespace
 {
 
 const std::string ApiKey = "kttak-query-test-key";
-const std::string BaseUrl = "https://ktt.example.org";
+const std::string BaseUrl = RemoteDatabase::GetHost();
 const std::string QueryUrl = BaseUrl + "/ktt-db/app/result/query";
 
 struct QueryFixture
@@ -52,7 +52,7 @@ struct QueryFixture
     {
         RemoteDatabaseOptions options;
         options.maxRetries = maxRetries;
-        return RemoteDatabase(BaseUrl, ApiKey, options, http);
+        return RemoteDatabase(ApiKey, options, http);
     }
 };
 
@@ -107,7 +107,7 @@ json QueryItem(const ktt::KernelResult &result, const ktt::OutputFormat format, 
     if (withResult)
     {
         const ktt::db::TimeUnitGuard guard(unit);
-        item["result"] = json::parse(ktt::db::DatabaseUtility::SerializeResult(result, format, 0));
+        item["result"] = json::parse(ktt::db::ResultSerialization::SerializeResult(result, format, 0));
     }
 
     return item;

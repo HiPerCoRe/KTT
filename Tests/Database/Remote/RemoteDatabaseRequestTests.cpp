@@ -16,7 +16,7 @@
 
 #include <Api/KttException.h>
 #include <Database/Remote/RemoteDatabase.h>
-#include <Database/Repository/Utility.h>
+#include <Database/Utility/ResultSerialization.h>
 #include <Database/Utility/TimeUnitGuard.h>
 #include <Database/Utility/Uuid.h>
 #include <Output/TimeConfiguration/TimeConfiguration.h>
@@ -39,7 +39,7 @@ namespace
 {
 
 const std::string ApiKey = "kttak-secret-test-key";
-const std::string BaseUrl = "https://ktt.example.org";
+const std::string BaseUrl = RemoteDatabase::GetHost();
 const std::string AppUrl = BaseUrl + "/ktt-db/app";
 
 const std::string SaveRunResponse = R"({"run_id":"0193a1f2-7c4e-7b3a-9d21-5e8f0c6a4b17","source_id":1,"space_id":2,)"
@@ -55,7 +55,7 @@ struct Fixture
     {
         RemoteDatabaseOptions options;
         options.maxRetries = maxRetries;
-        return RemoteDatabase(BaseUrl, ApiKey, options, http);
+        return RemoteDatabase(ApiKey, options, http);
     }
 
     std::vector<RecordedRequest> Requests() const
@@ -76,7 +76,7 @@ json ResultOut(const ktt::KernelResult &result, const ktt::OutputFormat format, 
     return json{{"duration", result.GetKernelDuration()}, {"total_duration", result.GetTotalDuration()},
         {"output_format", format == ktt::OutputFormat::JSON_T4 ? "json_t4" : "json"},
         {"time_unit", ktt::db::TimeUnitToName(unit)},
-        {"result", json::parse(ktt::db::DatabaseUtility::SerializeResult(result, format, 0))}};
+        {"result", json::parse(ktt::db::ResultSerialization::SerializeResult(result, format, 0))}};
 }
 
 json ResultList(const std::vector<ktt::Nanoseconds> &durations)

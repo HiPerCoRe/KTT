@@ -2,9 +2,10 @@
 #include <cstddef>
 #include <cstdint>
 #include <exception>
+#include <filesystem>
+#include <fstream>
 #include <functional>
 #include <iterator>
-#include <mutex>
 #include <set>
 #include <string>
 #include <string_view>
@@ -14,17 +15,21 @@
 
 #include <Api/KttException.h>
 #include <Database/Remote/Http/CurlHttpClient.h>
-#include <Database/Remote/RemoteClient.h>
 #include <Database/Remote/RemoteDatabase.h>
-#include <Database/Remote/RemoteDatabaseInternal.h>
-#include <Database/Remote/RemoteDatabaseShared.h>
-#include <Database/Remote/WireFormat.h>
-#include <Database/Repository/Utility.h>
-#include <Database/Utility/TimeUnitGuard.h>
+#include <Database/Remote/Utility/RemoteClient.h>
+#include <Database/Remote/Utility/RemoteInternal.h>
+#include <Database/Remote/Utility/Wire/Result.h>
+#include <Database/Remote/Utility/Wire/Run.h>
+#include <Database/Remote/Utility/Wire/Source.h>
+#include <Database/Remote/Utility/Wire/Space.h>
+#include <Database/Utility/DataDirectory.h>
 #include <Database/Utility/TuningInfoValidation.h>
 #include <Database/Utility/Uuid.h>
-#include <Output/TimeConfiguration/TimeConfiguration.h>
-#include <Utility/Logger/Logger.h>
+
+#if !defined(KTT_REMOTE_DATABASE_HOST)
+// The ktt-db server of this build. premake sets it from --remote-database-host; the default is a local backend.
+#define KTT_REMOTE_DATABASE_HOST "https://localhost:8888"
+#endif
 
 namespace ktt::db
 {
@@ -43,230 +48,33 @@ constexpr size_t RunPageSize = 500;
 // Longest part of a response body quoted in an exception message.
 constexpr size_t MaxQuotedBodyLength = 300;
 
-// A result read from the server, with the kernel duration in nanoseconds the server orders by (ResultOut.duration).
-struct RemoteResult
+// A result read from the server, with the kernel duration in nanoseconds the server orders by.
+struct RankedResult
 {
     int64_t duration;
     KernelResult result;
 };
 
-std::string ComputeApiToWire(const ComputeApi api)
+std::vector<RankedResult> ToRankedResults(const wire::ResultList &list)
 {
-    switch (api)
-    {
-    case ComputeApi::OpenCL:
-        return "opencl";
-    case ComputeApi::CUDA:
-        return "cuda";
-    case ComputeApi::Vulkan:
-        return "vulkan";
-    case ComputeApi::Cpp:
-        return "cpp";
-    }
+    std::vector<RankedResult> results;
+    results.reserve(list.results.size());
 
-    throw KttException("unknown compute API value " + std::to_string(static_cast<int>(api)));
-}
-
-ComputeApi ComputeApiFromWire(const std::string &name)
-{
-    for (const auto api : {ComputeApi::OpenCL, ComputeApi::CUDA, ComputeApi::Vulkan, ComputeApi::Cpp})
-    {
-        if (ComputeApiToWire(api) == name)
-            return api;
-    }
-
-    throw KttException("unknown compute API '" + name + "' in the response");
-}
-
-// The server stores no XML, so a client configured for XML sends JSON (cpp-requirements.md R4.1.3).
-OutputFormat GetWireFormat(const OutputFormat format)
-{
-    if (format != OutputFormat::XML)
-        return format;
-
-    static std::once_flag logged;
-    std::call_once(logged, []
-    {
-        Logger::LogWarning("The remote database stores no XML; results saved with OutputFormat::XML are stored as JSON");
-    });
-
-    return OutputFormat::JSON;
-}
-
-std::string OutputFormatToWire(const OutputFormat format)
-{
-    return format == OutputFormat::JSON_T4 ? "json_t4" : "json";
-}
-
-OutputFormat OutputFormatFromWire(const std::string &name)
-{
-    if (name == "json")
-        return OutputFormat::JSON;
-    if (name == "json_t4")
-        return OutputFormat::JSON_T4;
-
-    throw KttException("unknown output format '" + name + "' in the response");
-}
-
-json OptionalToWire(const std::optional<std::string> &value)
-{
-    return value.has_value() ? json(*value) : json(nullptr);
-}
-
-json OptionalToWire(const std::optional<uint32_t> &value)
-{
-    return value.has_value() ? json(*value) : json(nullptr);
-}
-
-json DeviceToWire(const DeviceInfo &device)
-{
-    return json{
-        {"name", device.name},
-        {"vendor", device.vendor},
-        {"type", device.type},
-        {"compute_api", ComputeApiToWire(device.computeApi)},
-        {"device_identifier", OptionalToWire(device.deviceIdentifier)},
-        // The local Database stores an unknown driver as ""; the server's "unknown" is null.
-        {"driver_version", device.driverVersion.empty() ? json(nullptr) : json(device.driverVersion)},
-        {"extensions", OptionalToWire(device.extensions)},
-        {"cuda_compute_capability_major", OptionalToWire(device.cudaComputeCapabilityMajor)},
-        {"cuda_compute_capability_minor", OptionalToWire(device.cudaComputeCapabilityMinor)}};
-}
-
-// Reads a device the way the local RunRepository does: an empty identifier or extensions string is no value, and an
-// unknown driver version is "".
-DeviceInfo DeviceFromWire(const json &device)
-{
-    const auto optionalText = [&device](const char *key) -> std::optional<std::string>
-    {
-        const auto it = device.find(key);
-
-        if (it == device.end() || it->is_null())
-            return std::nullopt;
-
-        auto text = it->get<std::string>();
-        return text.empty() ? std::nullopt : std::optional<std::string>(std::move(text));
-    };
-
-    const auto optionalNumber = [&device](const char *key) -> std::optional<uint32_t>
-    {
-        const auto it = device.find(key);
-
-        if (it == device.end() || it->is_null())
-            return std::nullopt;
-
-        return it->get<uint32_t>();
-    };
-
-    DeviceInfo info;
-    info.name = device.at("name").get<std::string>();
-    info.vendor = device.at("vendor").get<std::string>();
-    info.type = device.at("type").get<std::string>();
-    info.computeApi = ComputeApiFromWire(device.at("compute_api").get<std::string>());
-    info.deviceIdentifier = optionalText("device_identifier");
-    info.driverVersion = optionalText("driver_version").value_or("");
-    info.extensions = optionalText("extensions");
-    info.cudaComputeCapabilityMajor = optionalNumber("cuda_compute_capability_major");
-    info.cudaComputeCapabilityMinor = optionalNumber("cuda_compute_capability_minor");
-    return info;
-}
-
-json TuningInfoToWire(const TuningInfo &info)
-{
-    return json{
-        {"device", DeviceToWire(info.device)},
-        {"tuner", {{"name", info.tuner.name}, {"version", info.tuner.version}}},
-        {"input_data", OptionalToWire(info.inputData)},
-        {"space_info",
-            {{"source_fingerprint", FingerprintToWire(info.spaceInfo.sourceFingerprint)},
-                {"parameter_fingerprint", FingerprintToWire(info.spaceInfo.parameterFingerprint)},
-                {"space_fingerprint", FingerprintToWire(info.spaceInfo.spaceFingerprint)},
-                {"source_name", OptionalToWire(info.spaceInfo.sourceName)},
-                {"space_name", OptionalToWire(info.spaceInfo.spaceName)}}}};
-}
-
-json ParameterValueToWire(const ParameterPair &pair)
-{
-    const ParameterValue &value = pair.GetValue();
-
-    switch (pair.GetValueType())
-    {
-    case ParameterValueType::Int:
-        return std::get<int64_t>(value);
-    case ParameterValueType::UnsignedInt:
-        return std::get<uint64_t>(value);
-    case ParameterValueType::Double:
-        return std::get<double>(value);
-    case ParameterValueType::Bool:
-        return std::get<bool>(value);
-    case ParameterValueType::String:
-    case ParameterValueType::CompilerParameter:
-    default:
-        return pair.GetValueString();
-    }
-}
-
-json ResultToWire(const KernelResult &result, const OutputFormat format)
-{
-    json configuration = json::object();
-
-    for (const auto &pair : result.GetConfiguration().GetPairs())
-        configuration[pair.GetName()] = ParameterValueToWire(pair);
-
-    return json{
-        {"duration", result.GetKernelDuration()},
-        {"total_duration", result.GetTotalDuration()},
-        {"status", "ok"},
-        {"configuration", std::move(configuration)},
-        {"result", json::parse(DatabaseUtility::SerializeResult(result, format, 0))}};
-}
-
-// Reads a ResultList, in the server's order. The durations inside each payload are read in the unit of its run.
-std::vector<RemoteResult> ResultsFromWire(const json &body)
-{
-    const json &items = body.at("results");
-
-    if (!items.is_array())
-        throw KttException("\"results\" in the response is not an array");
-
-    std::vector<RemoteResult> results;
-    results.reserve(items.size());
-
-    for (const auto &item : items)
-    {
-        const auto format = OutputFormatFromWire(item.at("output_format").get<std::string>());
-        const auto timeUnit = TimeUnitFromName(item.at("time_unit").get<std::string>());
-        const json &payload = item.at("result");
-
-        if (!payload.is_object())
-            throw KttException("a result payload in the response is not a JSON object");
-
-        results.push_back({item.at("duration").get<int64_t>(),
-            DatabaseUtility::DeserializeResult(payload.dump(), format, timeUnit)});
-    }
+    for (const auto &result : list.results)
+        results.push_back({result.duration, result.ToKernelResult()});
 
     return results;
 }
 
-std::vector<KernelResult> ToKernelResults(std::vector<RemoteResult> results)
+std::vector<KernelResult> ToKernelResults(const wire::ResultList &list)
 {
-    std::vector<KernelResult> kernelResults;
-    kernelResults.reserve(results.size());
+    std::vector<KernelResult> results;
+    results.reserve(list.results.size());
 
-    for (auto &result : results)
-        kernelResults.push_back(std::move(result.result));
+    for (const auto &result : list.results)
+        results.push_back(result.ToKernelResult());
 
-    return kernelResults;
-}
-
-size_t CountFromWire(const json &body, const char *key)
-{
-    const auto count = body.at(key).get<int64_t>();
-
-    if (count < 0)
-        throw KttException(std::string("\"") + key + "\" in the response is negative");
-
-    return static_cast<size_t>(count);
+    return results;
 }
 
 std::string Quote(const std::string &text)
@@ -401,6 +209,48 @@ auto Translate(const std::string &operation, const RemoteClient &client, Functio
     }
 }
 
+// Name of the API key file in KTT's data directory (next to the default local database)
+constexpr const char *ApiKeyFileName = "api-key";
+
+// A key is a short token; anything larger is not a key file.
+constexpr std::uintmax_t MaxApiKeyFileSize = 4096;
+
+// Reads the API key from a key file, without surrounding whitespace. The messages name the file, never its content.
+std::string ReadApiKeyFile(const std::filesystem::path &path)
+{
+    const std::string where = "RemoteDatabase: the API key file " + path.u8string();
+    std::error_code error;
+
+    if (!std::filesystem::exists(path, error))
+    {
+        throw KttException(where + " does not exist; write the key to it or pass the key to the RemoteDatabase "
+            "constructor");
+    }
+
+    if (!std::filesystem::is_regular_file(path, error))
+        throw KttException(where + " is not a file");
+
+    const std::uintmax_t size = std::filesystem::file_size(path, error);
+
+    if (error || size > MaxApiKeyFileSize)
+        throw KttException(where + (error ? " cannot be read" : " is too large to hold an API key"));
+
+    std::ifstream file(path, std::ios::binary);
+    std::string text(static_cast<size_t>(size), '\0');
+
+    if (!file || !file.read(text.data(), static_cast<std::streamsize>(text.size())))
+        throw KttException(where + " cannot be read");
+
+    static constexpr const char *Whitespace = " \t\r\n";
+    const size_t first = text.find_first_not_of(Whitespace);
+
+    if (first == std::string::npos)
+        throw KttException(where + " is empty");
+
+    const size_t last = text.find_last_not_of(Whitespace);
+    return text.substr(first, last - first + 1);
+}
+
 void CheckLimit(const std::string &operation, const uint32_t limit)
 {
     if (limit > MaxResultLimit)
@@ -412,16 +262,45 @@ void CheckLimit(const std::string &operation, const uint32_t limit)
 
 } // namespace
 
-RemoteDatabase::RemoteDatabase(std::string baseUrl, std::string apiKey, RemoteDatabaseOptions options) :
-    RemoteDatabase(std::move(baseUrl), std::move(apiKey), options, std::make_shared<CurlHttpClient>(options))
+RemoteDatabase::RemoteDatabase(RemoteDatabaseOptions options) :
+    RemoteDatabase(ReadApiKeyFile(GetDefaultApiKeyPath()), std::move(options))
 {}
 
-RemoteDatabase::RemoteDatabase(std::string baseUrl, std::string apiKey, RemoteDatabaseOptions options,
+RemoteDatabase::RemoteDatabase(std::string apiKey, RemoteDatabaseOptions options) :
+    RemoteDatabase(std::move(apiKey), options, std::make_shared<CurlHttpClient>(options))
+{}
+
+RemoteDatabase::RemoteDatabase(RemoteDatabaseOptions options, std::shared_ptr<HttpClient> httpClient) :
+    RemoteDatabase(ReadApiKeyFile(GetDefaultApiKeyPath()), std::move(options), std::move(httpClient))
+{}
+
+RemoteDatabase::RemoteDatabase(std::string apiKey, RemoteDatabaseOptions options,
     std::shared_ptr<HttpClient> httpClient) :
-    m_Client(std::make_unique<RemoteClient>(std::move(baseUrl), std::move(apiKey), options.maxRetries,
-        std::move(httpClient))),
+    m_Client(std::make_unique<RemoteClient>(GetHost(), std::move(apiKey), options.maxRetries, std::move(httpClient))),
     m_SourceCodeProvider(std::move(options.sourceCodeProvider))
 {}
+
+std::string RemoteDatabase::GetHost()
+{
+    std::string host = KTT_REMOTE_DATABASE_HOST;
+
+    while (!host.empty() && host.back() == '/')
+        host.pop_back();
+
+    return host;
+}
+
+std::filesystem::path RemoteDatabase::GetDefaultApiKeyPath()
+{
+    try
+    {
+        return GetDefaultDataDirectory() / ApiKeyFileName;
+    }
+    catch (const KttException &exception)
+    {
+        throw KttException(std::string(exception.what()) + "; pass the API key to the RemoteDatabase constructor");
+    }
+}
 
 RemoteDatabase::~RemoteDatabase() = default;
 
@@ -431,38 +310,16 @@ void RemoteDatabase::SaveResults(const TuningInfo &source, std::vector<KernelRes
     static const std::string Operation = "RemoteDatabase::SaveResults";
     ValidateTuningInfo(source);
 
-    const json response = Translate(Operation, *m_Client, [&]
+    const auto response = Translate(Operation, *m_Client, [&]
     {
         // Generated once, before the request: every retry sends the same id, so the server saves the run only once.
-        const uuid runId = UuidGenerator::GenerateUuidV7();
-        const OutputFormat format = GetWireFormat(options.format);
-        json body;
-
-        {
-            // The payloads are written in the current time unit, which time_unit records. The lock keeps other
-            // database threads from switching the unit while the results are serialized.
-            const auto lock = LockTimeUnit();
-            json wireResults = json::array();
-
-            for (const auto &result : results)
-            {
-                if (result.GetStatus() == ResultStatus::Ok)
-                    wireResults.push_back(ResultToWire(result, format));
-            }
-
-            body = json{
-                {"id", UuidGenerator::ToString(runId)},
-                {"tuning_info", TuningInfoToWire(source)},
-                {"output_format", OutputFormatToWire(format)},
-                {"time_unit", TimeUnitToName(TimeConfiguration::GetInstance().GetTimeUnit())},
-                {"results", std::move(wireResults)}};
-        }
+        const json body = wire::SaveRunRequest::From(UuidGenerator::GenerateUuidV7(), source, results, options.format);
 
         // Without notFoundIsEmpty, Call returns a body or throws.
-        return *Call(*m_Client, Operation, "POST", "/run", &body, false);
+        return Call(*m_Client, Operation, "POST", "/run", &body, false)->get<wire::SaveRunResponse>();
     });
 
-    UploadMissingSourceCode(*this, m_SourceCodeProvider, source.spaceInfo.sourceFingerprint, response);
+    UploadMissingSourceCode(*this, m_SourceCodeProvider, source.spaceInfo.sourceFingerprint, response.sourceHasCode);
 }
 
 std::vector<KernelResult> RemoteDatabase::SimpleGetBestResults(const TuningInfo &source, const uint32_t limit) const
@@ -477,10 +334,10 @@ std::vector<KernelResult> RemoteDatabase::SimpleGetBestResults(const TuningInfo 
 
     return Translate(Operation, *m_Client, [&]() -> std::vector<KernelResult>
     {
-        const json body{{"tuning_info", TuningInfoToWire(source)}, {"limit", limit}};
+        const json body = wire::BestResultsRequest{wire::TuningInfo::From(source), limit};
         // The endpoint answers an unknown source or space with an empty list, so a 404 is an error here.
         const auto response = Call(*m_Client, Operation, "POST", "/result/best", &body, false);
-        return ToKernelResults(ResultsFromWire(*response));
+        return ToKernelResults(response->get<wire::ResultList>());
     });
 }
 
@@ -495,19 +352,20 @@ std::vector<KernelResult> RemoteDatabase::GetBestResults(const GetBestResultsQue
 
     return Translate(Operation, *m_Client, [&]() -> std::vector<KernelResult>
     {
-        const std::string sourcePath = "/source/" + FingerprintToWire(query.source.sourceFingerprint);
+        const std::string sourcePath = "/source/" + wire::FingerprintToString(query.source.sourceFingerprint);
         const auto space = Call(*m_Client, Operation, "GET", sourcePath + "/space?parameter_fingerprint="
-            + FingerprintToWire(query.source.parameterFingerprint) + "&space_fingerprint="
-            + FingerprintToWire(query.source.spaceFingerprint), nullptr, true);
+            + wire::FingerprintToString(query.source.parameterFingerprint) + "&space_fingerprint="
+            + wire::FingerprintToString(query.source.spaceFingerprint), nullptr, true);
 
         if (!space)
             return {};
 
-        const std::string spacePath = sourcePath + "/space/" + std::to_string(space->at("space_id").get<int64_t>());
+        const std::string spacePath =
+            sourcePath + "/space/" + std::to_string(space->get<wire::FindSpaceResponse>().spaceId);
 
         // Offset paging shifts when a run becomes visible meanwhile, so a run can come back on a later page.
         std::set<uuid> seenRuns;
-        std::vector<RemoteResult> bestResults;
+        std::vector<RankedResult> bestResults;
 
         for (size_t offset = 0;;)
         {
@@ -517,46 +375,36 @@ std::vector<KernelResult> RemoteDatabase::GetBestResults(const GetBestResultsQue
             if (!page)
                 return {};
 
-            const json &runs = page->at("runs");
-
-            if (!runs.is_array())
-                throw KttException(Operation + " failed: \"runs\" in the response is not an array");
-
-            json runIds = json::array();
+            const auto runs = page->get<wire::SpaceRunsResponse>().runs;
+            wire::RunResultsRequest request{{}, query.limit};
 
             for (const auto &run : runs)
             {
-                const uuid runId = UuidGenerator::Parse(run.at("run_id").get<std::string>());
-
-                if (!seenRuns.insert(runId).second)
+                if (!seenRuns.insert(run.runId).second)
                     continue;
 
                 bool keep = true;
 
                 if (query.devicePredicate)
-                    keep = CallPredicate(*query.devicePredicate, DeviceFromWire(run.at("device")));
+                    keep = CallPredicate(*query.devicePredicate, run.device.ToDeviceInfo());
 
                 // As in the local Database: with an input predicate, a run without input data is left out.
                 if (keep && query.inputPredicate)
-                {
-                    const auto input = run.find("input_data");
-                    keep = input != run.end() && !input->is_null()
-                        && CallPredicate(*query.inputPredicate, input->get<std::string>());
-                }
+                    keep = run.inputData.has_value() && CallPredicate(*query.inputPredicate, *run.inputData);
 
                 if (keep)
-                    runIds.push_back(UuidGenerator::ToString(runId));
+                    request.runIds.push_back(run.runId);
             }
 
-            if (!runIds.empty())
+            if (!request.runIds.empty())
             {
-                const json body{{"run_ids", std::move(runIds)}, {"limit", query.limit}};
+                const json body = request;
                 const auto response = Call(*m_Client, Operation, "POST", spacePath + "/result", &body, true);
 
                 if (!response)
                     return {};
 
-                auto batch = ResultsFromWire(*response);
+                auto batch = ToRankedResults(response->get<wire::ResultList>());
 
                 // Both ranges are sorted by kernel duration: bestResults by earlier merges, the batch by the server.
                 // The merge is stable, so equal durations keep their order and earlier pages win ties, as locally.
@@ -564,7 +412,7 @@ std::vector<KernelResult> RemoteDatabase::GetBestResults(const GetBestResultsQue
                 bestResults.insert(bestResults.end(), std::make_move_iterator(batch.begin()),
                     std::make_move_iterator(batch.end()));
                 std::inplace_merge(bestResults.begin(), bestResults.begin() + oldSize, bestResults.end(),
-                    [](const RemoteResult &left, const RemoteResult &right) { return left.duration < right.duration; });
+                    [](const RankedResult &left, const RankedResult &right) { return left.duration < right.duration; });
 
                 if (bestResults.size() > query.limit)
                     bestResults.erase(bestResults.begin() + query.limit, bestResults.end());
@@ -576,7 +424,13 @@ std::vector<KernelResult> RemoteDatabase::GetBestResults(const GetBestResultsQue
             offset += runs.size();
         }
 
-        return ToKernelResults(std::move(bestResults));
+        std::vector<KernelResult> kernelResults;
+        kernelResults.reserve(bestResults.size());
+
+        for (auto &result : bestResults)
+            kernelResults.push_back(std::move(result.result));
+
+        return kernelResults;
     });
 }
 
@@ -587,50 +441,16 @@ std::optional<SourceStats> RemoteDatabase::GetStatsForSource(const size_t source
     return Translate(Operation, *m_Client, [&]() -> std::optional<SourceStats>
     {
         const auto response = Call(*m_Client, Operation, "GET",
-            "/source/" + FingerprintToWire(sourceFingerprint) + "/stats", nullptr, true);
+            "/source/" + wire::FingerprintToString(sourceFingerprint) + "/stats", nullptr, true);
 
         if (!response)
             return std::nullopt;
 
-        SourceStats stats;
-        stats.spaceCount = CountFromWire(*response, "space_count");
-        stats.deviceCount = CountFromWire(*response, "device_count");
-        stats.runCount = CountFromWire(*response, "run_count");
-        stats.resultCount = CountFromWire(*response, "result_count");
-        // The application API returns no names (cpp-requirements.md R1.4).
-        stats.name = std::nullopt;
-        return stats;
+        return response->get<wire::SourceStatsResponse>().ToSourceStats();
     });
 }
 
-// The helpers above, for the other RemoteDatabase*.cpp files (RemoteDatabaseShared.h).
-namespace remote
-{
-
-std::optional<json> CallServer(const RemoteClient &client, const std::string &operation, const std::string_view method,
-    const std::string &path, const json *body, const bool notFoundIsEmpty)
-{
-    return Call(client, operation, method, path, body, notFoundIsEmpty);
-}
-
-void RunTranslated(const std::string &operation, const RemoteClient &client, const std::function<void()> &function)
-{
-    Translate(operation, client, function);
-}
-
-DeviceInfo ReadDevice(const json &device)
-{
-    return DeviceFromWire(device);
-}
-
-OutputFormat ReadOutputFormat(const std::string &name)
-{
-    return OutputFormatFromWire(name);
-}
-
-} // namespace remote
-
-// The request helpers above, for the other source files of RemoteDatabase (RemoteDatabaseInternal.h).
+// The helpers above, for the other source files of RemoteDatabase (Remote/Utility/RemoteInternal.h).
 
 std::optional<json> CallRemote(const RemoteClient &client, const std::string &operation, const std::string_view method,
     const std::string &path, const json *body, const bool notFoundIsEmpty, long *status)

@@ -12,7 +12,7 @@
 #include <vector>
 
 #include <Api/KttException.h>
-#include <Database/Remote/RemoteClient.h>
+#include <Database/Remote/Utility/RemoteClient.h>
 
 #include "FakeHttpClient.h"
 

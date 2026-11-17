@@ -20,9 +20,9 @@
 
 #include <Api/KttException.h>
 #include <Database/Remote/Http/CurlHttpClient.h>
-#include <Database/Remote/RemoteClient.h>
+#include <Database/Remote/Utility/RemoteClient.h>
 
-#include "../DefaultLocation/DefaultLocationTestHelpers.h"
+#include "../Local/DefaultLocation/DefaultLocationTestHelpers.h"
 
 using ktt::db::CurlHttpClient;
 using ktt::db::HttpResponse;

@@ -2,9 +2,11 @@
 
 #if defined(KTT_REMOTE_DATABASE)
 
-// R8.4: against a running ktt-db server. Hidden (run it with: ./Tests "[integration]") and skipped unless both
-// KTT_DB_URL and KTT_DB_API_KEY are set. The key needs the write permission. Every run uses new random fingerprints,
-// so it can be repeated against the same server.
+// R8.4: against the ktt-db server this build talks to (RemoteDatabase::GetHost, set with the premake option
+// --remote-database-host). Hidden (run it with: ./Tests "[integration]") and skipped unless KTT_DB_API_KEY is set. The
+// key needs the write permission. KTT_DB_CA_BUNDLE optionally names a CA bundle (PEM) for a server with a self-signed
+// certificate, such as the local development backend. Every run uses new random fingerprints, so it can be repeated
+// against the same server.
 
 #include <cstdint>
 #include <cstdlib>
@@ -23,16 +25,20 @@ using ktt::db::test::Millisecond;
 
 TEST_CASE("RemoteDatabase saves and reads results on a ktt-db server", "[.integration][Database][Remote]")
 {
-    const char *url = std::getenv("KTT_DB_URL");
     const char *apiKey = std::getenv("KTT_DB_API_KEY");
 
-    if (url == nullptr || apiKey == nullptr || *url == '\0' || *apiKey == '\0')
+    if (apiKey == nullptr || *apiKey == '\0')
     {
-        WARN("KTT_DB_URL or KTT_DB_API_KEY is not set: skipped");
+        WARN("KTT_DB_API_KEY is not set: skipped");
         return;
     }
 
-    const ktt::db::RemoteDatabase db(url, apiKey);
+    ktt::db::RemoteDatabaseOptions options;
+
+    if (const char *caBundle = std::getenv("KTT_DB_CA_BUNDLE"); caBundle != nullptr && *caBundle != '\0')
+        options.caBundle = caBundle;
+
+    const ktt::db::RemoteDatabase db(apiKey, options);
 
     std::random_device random;
     std::uniform_int_distribution<size_t> fingerprints(1, SIZE_MAX);

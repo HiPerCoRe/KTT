@@ -1,8 +1,8 @@
 #pragma once
 
-// Shared fixture helpers for the Database unit tests. This header is only included from within the
-// #if defined(KTT_DATABASE) guard of each Database test file (the database extension is compiled in
-// with premake --database, which defines KTT_DATABASE and pulls in the Database sources + sqlite3).
+// Shared fixture helpers for the local and the remote Database unit tests. This header is only included from within
+// the KTT_DATABASE or KTT_REMOTE_DATABASE guard of each test file, and needs neither database: the local tests include
+// <Database/Local/Database.h> themselves.
 // The helpers are inline in a named namespace so the header can be included in several translation
 // units without ODR issues and without unused-function warnings in files that use only some of them.
 
@@ -19,7 +19,7 @@
 #include <Api/Output/ComputationResult.h>
 #include <Api/Output/KernelResult.h>
 #include <ComputeEngine/ComputeApi.h>
-#include <Database/Database.h>
+#include <Database/IDatabase.h>
 
 namespace ktt::db::test
 {

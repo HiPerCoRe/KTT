@@ -2,15 +2,44 @@
 
 This module provides a lightweight SQLite-backed store for tuning results. Typical usage is guarded by the KTT_DATABASE define.
 
-For hands-on, code-level usage see [Example.md](Example.md), which walks through the end-to-end example in [/Examples/CoulombSum3dDatabase/CoulombSum3dDatabase.cpp](Examples/CoulombSum3dDatabase/CoulombSum3dDatabase.cpp). The schema behind these operations is documented in [ERD.md](ERD.md).
+For hands-on, code-level usage see [Example.md](Example.md), which walks through the end-to-end example in [/Examples/Database/CoulombSum3dLocal/CoulombSum3dLocal.cpp](../Examples/Database/CoulombSum3dLocal/CoulombSum3dLocal.cpp). The same example against a ktt-db server is [/Examples/Database/CoulombSum3dRemote/CoulombSum3dRemote.cpp](../Examples/Database/CoulombSum3dRemote/CoulombSum3dRemote.cpp). The schema behind these operations is documented in [ERD.md](ERD.md).
 
 ## Enable database usage
 
-Enable the database build option in premake5 (use the option `--database`), which defines `KTT_DATABASE` and includes the database header in the build.
+The local and the remote database are separate premake5 options. Use either one, or both:
 
-The remote client (`RemoteDatabase`, see [Remote database](#remote-database)) is built with `--remote-database`, which
-implies `--database`, defines `KTT_REMOTE_DATABASE` and links libcurl. A build with `--database` only does not need
-libcurl.
+| Options | Builds | Defines | Needs |
+|---|---|---|---|
+| `--database` | the local SQLite `Database` | `KTT_DATABASE` | sqlite3 (bundled) |
+| `--remote-database` | the remote client `RemoteDatabase` (see [Remote database](#remote-database)) | `KTT_REMOTE_DATABASE` | libcurl |
+| `--database --remote-database` | both | both | both |
+| `--remote-database-host=URL` | with `--remote-database`: the server `RemoteDatabase` talks to | `KTT_REMOTE_DATABASE_HOST` | – |
+
+The shared part (`IDatabase.h` and `Utility/`) is built with either option. A local-only build does not link
+libcurl, and a remote-only build leaves out `Local/` and sqlite3. The server host is fixed at build time and defaults
+to the local development backend, `https://localhost:8888`. With `KTT_DATABASE`, `Ktt.h` includes the local
+`Database`; the remote client is included with `#include <Database/Remote/RemoteDatabase.h>`.
+
+## Source layout
+
+Headers are included relative to this folder, e.g. `#include <Database/Local/Database.h>`.
+
+```
+Database/
+  IDatabase.h     the interface both databases implement
+  Utility/        shared by both: Uuid, TimeUnitGuard, TuningInfoValidation, ResultSerialization(JsonT4),
+                  DataDirectory (the folder of ktt.db and the API key file)
+  Local/          the SQLite Database (built with --database only)
+    Repository/   one repository per table group (Device, Result, Run, Source, Space, Tuner)
+    Schema/
+    Utility/      Statement, TransactionGuard, JsonConverters, SqlList
+  Remote/         RemoteDatabase (built with --remote-database only)
+    Http/         HttpClient and its libcurl implementation
+    Utility/      RemoteClient, RemoteInternal.h
+      Wire/       one type per request and response of the ktt-db API (to_json/from_json and the mapping to KTT's types)
+```
+
+The tests in `Tests/Database/` follow the same split: `Local/`, `Remote/` and `Utility/`.
 
 ## One interface for local and remote
 
@@ -124,15 +153,26 @@ includes the local `Database`.
 ```cpp
 #include <Database/Remote/RemoteDatabase.h>
 
-const ktt::db::RemoteDatabase db("https://ktt.example.org", apiKey);
+const ktt::db::RemoteDatabase db;           // API key from the key file next to the local database
+const ktt::db::RemoteDatabase db2(apiKey);  // API key given by the application
 ```
 
-- **Server URL:** the server root with `http://` or `https://`; the client appends `/ktt-db/app/...`.
+- **Server:** fixed when KTT is built, not by the application. The default is the local development backend,
+  `https://localhost:8888`; build with `--remote-database-host=https://...` for another server.
+  `RemoteDatabase::GetHost()` returns it. The client appends `/ktt-db/app/...`. The local backend has a self-signed
+  certificate: pass its CA in `RemoteDatabaseOptions::caBundle` (or, for testing only, turn off `verifyTls`).
 - **API key:** create one in the web app's settings. A `read` key may only read, a `write` key may also save. **The
   key decides the realms:** reads see what is linked to any of the key's realms, and a save links the new data to all
-  of them. There is no realm parameter. Keep the key out of source code, e.g. read it from an environment variable;
-  KTT never writes it into exception messages or logs.
-- **Construction** does not contact the server, so a wrong URL or key shows up on the first call.
+  of them. There is no realm parameter. KTT never writes the key into exception messages or logs. Give it in one of
+  two ways:
+  - **by the application:** `RemoteDatabase(apiKey, options = {})`. Keep the key out of source code, e.g. read it from
+    an environment variable.
+  - **from the key file:** `RemoteDatabase(options = {})` reads the file `api-key` in the same folder as the default
+    local database: `~/.local/share/ktt/api-key` on Linux, or `$XDG_DATA_HOME/ktt/api-key` when set;
+    `%LOCALAPPDATA%\ktt\api-key` on Windows (`RemoteDatabase::GetDefaultApiKeyPath()`). The file holds only the
+    key; spaces and line breaks around it are ignored. A missing or empty file throws, and the message names the
+    file. Make the file readable only by you (`chmod 600`).
+- **Construction** does not contact the server, so a wrong key shows up on the first call.
 - `RemoteDatabase` is not copyable, like `Database`. Its methods are `const` and can be called from several threads
   at once.
 
@@ -248,8 +288,8 @@ db.SaveSourceCode(tuningInfo.spaceInfo.sourceFingerprint, tuner.GetKernelSources
 ```cpp
 ktt::db::RemoteDatabaseOptions options;
 options.sourceCodeProvider = ktt::db::MakeSourceCodeProvider(tuner, {kernel});
-const ktt::db::RemoteDatabase db("https://ktt.example.org", apiKey, options);
+const ktt::db::RemoteDatabase db(options);   // or db(apiKey, options)
 ```
 
 The test vectors of the source fingerprint, which the server computes the same way, are in
-[Tests/Database/SourceFingerprintVectors.json](../Tests/Database/SourceFingerprintVectors.json).
+[Tests/Database/Utility/SourceFingerprintVectors.json](../Tests/Database/Utility/SourceFingerprintVectors.json).

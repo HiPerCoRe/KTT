@@ -22,5 +22,5 @@
 #include <Api/Configuration/PreciseMeasurementParameters.h>
 
 #ifdef KTT_DATABASE
-#include <Database/Database.h>
+#include <Database/Local/Database.h>
 #endif

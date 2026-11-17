@@ -1,0 +1,61 @@
+{
+  "description": "Test vectors of KTT's source fingerprint (cpp-requirements.md R6.4, R8.3). Tests/Database/Utility/SourceFingerprintTests.cpp checks that KTT computes these values; the ktt-db backend (source_fingerprint.rs) computes the same, so it can read this file to check itself against KTT.",
+  "algorithm": "fingerprint = 0; for each definition source s, in the kernel's definition order: fingerprint = XXH3_64(le_u64(fingerprint) ++ le_u64(XXH3_64(utf8_bytes(s)))), with XXH3_64 seed 0 and le_u64 the 8-byte little-endian encoding. Definition names are not part of it. KTT: FingerprintUtility::GetFingerprintOfDefinitions.",
+  "fingerprint_format": "fingerprint is the unsigned 64-bit value in decimal, as the ktt-db API sends it; fingerprint_hex is the same value in hexadecimal.",
+  "vectors": [
+    {
+      "name": "one",
+      "sources": ["__kernel void a(__global float* x) { x[0] = 1.0f; }\n"],
+      "fingerprint": "16236849242048753393",
+      "fingerprint_hex": "0xe154e05befe2eef1"
+    },
+    {
+      "name": "two_ab",
+      "sources": [
+        "__kernel void a(__global float* x) { x[0] = 1.0f; }\n",
+        "__global__ void b(float* x) { x[0] = 2.0f; }\n"
+      ],
+      "fingerprint": "16551293918983522932",
+      "fingerprint_hex": "0xe5b2022076188a74"
+    },
+    {
+      "name": "two_ba",
+      "sources": [
+        "__global__ void b(float* x) { x[0] = 2.0f; }\n",
+        "__kernel void a(__global float* x) { x[0] = 1.0f; }\n"
+      ],
+      "fingerprint": "12082361886535667025",
+      "fingerprint_hex": "0xa7ad2c1ee6ad4d51"
+    },
+    {
+      "name": "empty_one",
+      "sources": [""],
+      "fingerprint": "9601993083386333853",
+      "fingerprint_hex": "0x854121d5f7000a9d"
+    },
+    {
+      "name": "empty_list",
+      "sources": [],
+      "fingerprint": "0",
+      "fingerprint_hex": "0x0000000000000000"
+    },
+    {
+      "name": "utf8",
+      "sources": ["// český text € 🚀\nint x;\n"],
+      "fingerprint": "448845483980050019",
+      "fingerprint_hex": "0x063a9e96efab4e63"
+    },
+    {
+      "name": "crlf",
+      "sources": ["int a;\r\nint b;  \r\n"],
+      "fingerprint": "3925580823608318575",
+      "fingerprint_hex": "0x367a76f5e0425a6f"
+    },
+    {
+      "name": "lf",
+      "sources": ["int a;\nint b;  \n"],
+      "fingerprint": "1251411570844613092",
+      "fingerprint_hex": "0x115de8318401b9e4"
+    }
+  ]
+}

@@ -1,7 +1,7 @@
 # Database ERD
 
 Entity-relationship diagram of the SQLite schema created by `Schema::CreateIfNotExists`
-(see [Database/Schema/Schema.cpp](Database/Schema/Schema.cpp)).
+(see [Database/Local/Schema/Schema.cpp](Database/Local/Schema/Schema.cpp)).
 
 ```mermaid
 erDiagram

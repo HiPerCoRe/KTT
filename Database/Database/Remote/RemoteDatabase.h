@@ -65,28 +65,60 @@ struct RemoteDatabaseOptions
 class KTT_API RemoteDatabase : public IDatabase
 {
 public:
-    /** @fn RemoteDatabase(std::string baseUrl, std::string apiKey, RemoteDatabaseOptions options = {})
-     * Creates a client for the server at baseUrl. The constructor does not contact the server.
-     * @param baseUrl Server root including the scheme, e.g. https://ktt.example.org. The client appends
-     *                /ktt-db/app/... to it; a trailing slash is ignored.
-     * @param apiKey API key created in the web app's settings (x-api-key).
+    /** @fn RemoteDatabase(RemoteDatabaseOptions options = {})
+     * Creates a client for the ktt-db server (see GetHost) that reads its API key from the key file (see
+     * GetDefaultApiKeyPath): the file holds only the key; whitespace and line breaks around it are ignored. The
+     * constructor does not contact the server.
      * @param options Timeouts, retries and TLS settings.
-     * @throw KttException If baseUrl is not an http:// or https:// URL, or apiKey is empty or contains a line break.
+     * @throw KttException If the key file location cannot be determined, the file does not exist or cannot be read,
+     *        or the key in it is empty or contains a control character. The message names the file, never the key.
      */
-    RemoteDatabase(std::string baseUrl, std::string apiKey, RemoteDatabaseOptions options = {});
+    explicit RemoteDatabase(RemoteDatabaseOptions options = {});
 
-    /** @fn RemoteDatabase(std::string baseUrl, std::string apiKey, RemoteDatabaseOptions options,
-     * std::shared_ptr<HttpClient> httpClient)
+    /** @fn RemoteDatabase(std::string apiKey, RemoteDatabaseOptions options = {})
+     * Creates a client for the ktt-db server (see GetHost) with the API key given by the application. The key file is
+     * not read. The constructor does not contact the server.
+     * @param apiKey API key created in the web app's settings (sent as x-api-key).
+     * @param options Timeouts, retries and TLS settings.
+     * @throw KttException If apiKey is empty or contains a control character.
+     */
+    explicit RemoteDatabase(std::string apiKey, RemoteDatabaseOptions options = {});
+
+    /** @fn RemoteDatabase(std::string apiKey, RemoteDatabaseOptions options, std::shared_ptr<HttpClient> httpClient)
      * Creates a client that sends its requests through the given HTTP client instead of libcurl. HttpClient is an
      * internal type, so this constructor is meant for tests. The timeouts and TLS settings in options are not used.
-     * @param baseUrl Server root including the scheme.
      * @param apiKey API key sent with every request.
      * @param options Retry settings.
      * @param httpClient The HTTP client. Must not be null.
-     * @throw KttException If baseUrl or apiKey is invalid, or httpClient is null.
+     * @throw KttException If apiKey is invalid or httpClient is null.
      */
-    RemoteDatabase(std::string baseUrl, std::string apiKey, RemoteDatabaseOptions options,
-        std::shared_ptr<HttpClient> httpClient);
+    RemoteDatabase(std::string apiKey, RemoteDatabaseOptions options, std::shared_ptr<HttpClient> httpClient);
+
+    /** @fn RemoteDatabase(RemoteDatabaseOptions options, std::shared_ptr<HttpClient> httpClient)
+     * Like the previous constructor, but reads the API key from the key file (see GetDefaultApiKeyPath). Meant for
+     * tests.
+     * @param options Retry settings.
+     * @param httpClient The HTTP client. Must not be null.
+     * @throw KttException If the key file cannot be read or holds an invalid key, or httpClient is null.
+     */
+    RemoteDatabase(RemoteDatabaseOptions options, std::shared_ptr<HttpClient> httpClient);
+
+    /** @fn static std::string GetHost()
+     * Returns the ktt-db server every RemoteDatabase talks to, e.g. https://localhost:8888. It is fixed when KTT is
+     * built (premake option --remote-database-host) and cannot be changed by the application. The client appends
+     * /ktt-db/app/... to it.
+     * @return The server root including the scheme, without a trailing slash.
+     */
+    static std::string GetHost();
+
+    /** @fn static std::filesystem::path GetDefaultApiKeyPath()
+     * Returns the API key file read by the constructors without an apiKey parameter: the file api-key in the same
+     * directory as the default local database, so %LOCALAPPDATA%\ktt\api-key on Windows and $XDG_DATA_HOME/ktt/api-key
+     * (falling back to ~/.local/share/ktt/api-key) elsewhere. Does not check that the file exists.
+     * @return Path of the key file.
+     * @throw KttException If the location cannot be determined (the environment variables above are unset).
+     */
+    static std::filesystem::path GetDefaultApiKeyPath();
 
     /** @fn ~RemoteDatabase()
      * Destructor.

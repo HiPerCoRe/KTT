@@ -12,8 +12,8 @@
 
 #include <Api/KttException.h>
 #include <Database/Remote/RemoteDatabase.h>
-#include <Database/Remote/RemoteDatabaseInternal.h>
-#include <Database/Remote/WireFormat.h>
+#include <Database/Remote/Utility/RemoteInternal.h>
+#include <Database/Remote/Utility/Wire/Source.h>
 #include <Tuner.h>
 #include <Utility/Fingerprint/FingerprintUtility.h>
 #include <Utility/Logger/Logger.h>
@@ -167,8 +167,8 @@ bool RemoteDatabase::SaveSourceCode(const size_t sourceFingerprint, const std::v
     // the code anyway.
     if (const size_t fingerprint = GetSourceFingerprint(definitions); fingerprint != sourceFingerprint)
     {
-        throw KttException(Operation + ": the sources have the source fingerprint " + FingerprintToWire(fingerprint)
-            + ", not " + FingerprintToWire(sourceFingerprint) + "; pass the kernel's definitions unchanged and in their "
+        throw KttException(Operation + ": the sources have the source fingerprint " + wire::FingerprintToString(fingerprint)
+            + ", not " + wire::FingerprintToString(sourceFingerprint) + "; pass the kernel's definitions unchanged and in their "
             "order (Tuner::GetKernelSources)");
     }
 
@@ -176,12 +176,7 @@ bool RemoteDatabase::SaveSourceCode(const size_t sourceFingerprint, const std::v
 
     TranslateRemote(Operation, *m_Client, [&]
     {
-        json wireDefinitions = json::array();
-
-        for (const auto &definition : definitions)
-            wireDefinitions.push_back(json{{"name", definition.name}, {"source", definition.source}});
-
-        const json body{{"definitions", std::move(wireDefinitions)}};
+        const json body = wire::SaveSourceCodeRequest::From(definitions);
 
         // JSON escaping (quotes, backslashes, control characters) makes the body larger than the sources.
         if (const size_t bodyBytes = body.dump().size(); bodyBytes > MaxBodyBytes)
@@ -191,7 +186,7 @@ bool RemoteDatabase::SaveSourceCode(const size_t sourceFingerprint, const std::v
         }
 
         // The code is immutable on the server, so a repeated PUT is safe: it answers 200 and changes nothing.
-        CallRemote(*m_Client, Operation, "PUT", "/source/" + FingerprintToWire(sourceFingerprint) + "/code", &body,
+        CallRemote(*m_Client, Operation, "PUT", "/source/" + wire::FingerprintToString(sourceFingerprint) + "/code", &body,
             false, &status);
     });
 
@@ -199,22 +194,20 @@ bool RemoteDatabase::SaveSourceCode(const size_t sourceFingerprint, const std::v
 }
 
 void UploadMissingSourceCode(const RemoteDatabase &database, const SourceCodeProvider &provider,
-    const size_t sourceFingerprint, const json &saveResponse)
+    const size_t sourceFingerprint, const std::optional<bool> sourceHasCode)
 {
     if (!provider)
         return;
 
-    const std::string source = "source " + FingerprintToWire(sourceFingerprint);
-    const auto hasCode = saveResponse.find("source_has_code");
-
-    if (hasCode == saveResponse.end() || !hasCode->is_boolean())
+    const std::string source = "source " + wire::FingerprintToString(sourceFingerprint);
+    if (!sourceHasCode.has_value())
     {
         Logger::LogWarning("RemoteDatabase::SaveResults: the results were saved, but the response does not say whether "
             "the server has the code of " + source + ", so it is not uploaded");
         return;
     }
 
-    if (hasCode->get<bool>())
+    if (*sourceHasCode)
         return;
 
     try
