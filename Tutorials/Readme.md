@@ -34,8 +34,8 @@ Showcases features that are good to know about, but might not be necessary for a
     GPU and CPU with this.
 - CompositeKernel: A kernel can also be made of several kernel definitions that are tuned together. This tutorial splits a blur
     into two passes and runs them in order with a kernel launcher. The work-group size of every definition is tuned on its own, and
-    a common tuning parameter chooses in which direction the intermediate result is stored. There is also a practical explanation on
-    the difference between kernel and kernel definition.
+    a common tuning parameter chooses whether the intermediate result is stored row-major or column-major. 
+    There is also a practical explanation on the difference between kernel and kernel definition.
 - CompilerTuning: Explains the difference between compiler options, compiler tuning, and separate compiler tuning on a sample C++ kernel.
 - VectorArgumentCustomization: Shows customization of vector argument handling -- argument memory location (device/host),
     buffer management type (framework/user, with manual uploading and clearing in a kernel launcher), and referencing
@@ -70,5 +70,5 @@ Mostly customization of things usually hidden in KTT's internals.
 - ComputeApiInitializer: Shows that compute API objects (context, streams, buffers) can be created externally and imported
     into KTT through a ComputeApiInitializer; existing device buffers can be added as arguments by handle.
     Has versions with C++ host code for tuning CUDA and OpenCL.
-- PythonInterfaces: Shows that it is possible to pass Python functions
+- PythonInterfaces: Shows that it is possible to pass Python classes
     to KTT, e.g. to define a custom searcher or stop condition.
