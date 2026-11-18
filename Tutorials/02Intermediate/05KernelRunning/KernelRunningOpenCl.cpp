@@ -1,4 +1,5 @@
-// KTT tutorial demonstrating kernel setup and execution via KTT
+// KTT tutorial demonstrating how to use the KTT API to process actual data by manual transfers between host and
+// device memory and by manual kernel running.
 // Users are recommended to start with KTT Introductory guide
 // at https://github.com/HiPerCoRe/KTT/blob/master/OnboardingGuide.md
 // before reading the tutorial's code.
@@ -128,7 +129,7 @@ int main(int argc, char** argv)
     // b was resized, so we must provide an explicit data pointer to it. On the other hand, a wasn't.
     tuner.UpdateBuffer(aId);
     tuner.UpdateBuffer(bId, b.data()/*, b.size() * sizeof(float)*/); // Would also need to give an explicit size if
-                                                                     // it was different in the end.
+                                                                     // it was different after resizing.
 
     tuner.Run(kernel, {}, {ktt::BufferOutputDescriptor(resultId, result.data())});
     // Print first ten elements from the result to check they were computed correctly.

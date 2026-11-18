@@ -1,5 +1,5 @@
-// KTT tutorial demonstrating that the same program can be used to tune
-// kernels using multiple different compute APIs.
+// KTT tutorial demonstrating the option to tune compiler options using compiler parameters. 
+// These compiler parameters can be tuned with the others, or in a separate fine-tuning phase. 
 // Users are recommended to start with KTT Introductory guide
 // at https://github.com/HiPerCoRe/KTT/blob/master/OnboardingGuide.md
 // before reading the tutorial's code.
