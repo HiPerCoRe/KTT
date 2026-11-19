@@ -6,8 +6,8 @@
 
 #include <Api/KttException.h>
 #include <Database/Remote/RemoteDatabase.h>
+#include <Database/Remote/Utility/RemoteCall.h>
 #include <Database/Remote/Utility/RemoteClient.h>
-#include <Database/Remote/Utility/RemoteInternal.h>
 #include <Database/Remote/Utility/Wire/Query.h>
 
 namespace ktt::db

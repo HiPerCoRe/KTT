@@ -2,7 +2,7 @@
 
 This module provides a lightweight SQLite-backed store for tuning results. Typical usage is guarded by the KTT_DATABASE define.
 
-For hands-on, code-level usage see [Example.md](Example.md), which walks through the end-to-end example in [/Examples/Database/CoulombSum3dLocal/CoulombSum3dLocal.cpp](../Examples/Database/CoulombSum3dLocal/CoulombSum3dLocal.cpp). The same example against a ktt-db server is [/Examples/Database/CoulombSum3dRemote/CoulombSum3dRemote.cpp](../Examples/Database/CoulombSum3dRemote/CoulombSum3dRemote.cpp). The schema behind these operations is documented in [ERD.md](ERD.md).
+For hands-on, code-level usage see [Example.md](Example.md), which walks through the end-to-end example in [/Examples/Database/CoulombSum3dLocal/CoulombSum3dLocal.cpp](../Examples/Database/CoulombSum3dLocal/CoulombSum3dLocal.cpp). The same example against a ktt-db server is [/Examples/Database/CoulombSum3dRemote/CoulombSum3dRemote.cpp](../Examples/Database/CoulombSum3dRemote/CoulombSum3dRemote.cpp). The schema behind these operations is documented in [ERD.md](ERD.md). To run the remote example against the FI MUNI server step by step, see [RemoteQuickStart.md](RemoteQuickStart.md).
 
 ## Enable database usage
 
@@ -17,7 +17,7 @@ The local and the remote database are separate premake5 options. Use either one,
 
 The shared part (`IDatabase.h` and `Utility/`) is built with either option. A local-only build does not link
 libcurl, and a remote-only build leaves out `Local/` and sqlite3. The server host is fixed at build time and defaults
-to the local development backend, `https://localhost:8888`. With `KTT_DATABASE`, `Ktt.h` includes the local
+to the FI MUNI server, `https://supercuda.fi.muni.cz:8443` (reachable only on the FI MUNI VPN). With `KTT_DATABASE`, `Ktt.h` includes the local
 `Database`; the remote client is included with `#include <Database/Remote/RemoteDatabase.h>`.
 
 ## Source layout
@@ -35,7 +35,7 @@ Database/
     Utility/      Statement, TransactionGuard, JsonConverters, SqlList
   Remote/         RemoteDatabase (built with --remote-database only)
     Http/         HttpClient and its libcurl implementation
-    Utility/      RemoteClient, RemoteInternal.h
+    Utility/      RemoteClient, RemoteCall (request and error mapping), ApiKeyFile, RemoteInternal.h
       Wire/       one type per request and response of the ktt-db API (to_json/from_json and the mapping to KTT's types)
 ```
 
@@ -157,8 +157,10 @@ const ktt::db::RemoteDatabase db;           // API key from the key file next to
 const ktt::db::RemoteDatabase db2(apiKey);  // API key given by the application
 ```
 
-- **Server:** fixed when KTT is built, not by the application. The default is the local development backend,
-  `https://localhost:8888`; build with `--remote-database-host=https://...` for another server.
+- **Server:** fixed when KTT is built, not by the application. The default is the FI MUNI server,
+  `https://supercuda.fi.muni.cz:8443`, which is reachable only on the FI MUNI VPN; build with
+  `--remote-database-host=https://...` for another server, e.g. `https://localhost:8888` for the local development
+  backend.
   `RemoteDatabase::GetHost()` returns it. The client appends `/ktt-db/app/...`. The local backend has a self-signed
   certificate: pass its CA in `RemoteDatabaseOptions::caBundle` (or, for testing only, turn off `verifyTls`).
 - **API key:** create one in the web app's settings. A `read` key may only read, a `write` key may also save. **The

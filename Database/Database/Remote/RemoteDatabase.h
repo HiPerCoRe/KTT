@@ -104,7 +104,7 @@ public:
     RemoteDatabase(RemoteDatabaseOptions options, std::shared_ptr<HttpClient> httpClient);
 
     /** @fn static std::string GetHost()
-     * Returns the ktt-db server every RemoteDatabase talks to, e.g. https://localhost:8888. It is fixed when KTT is
+     * Returns the ktt-db server every RemoteDatabase talks to, e.g. https://supercuda.fi.muni.cz:8443. It is fixed when KTT is
      * built (premake option --remote-database-host) and cannot be changed by the application. The client appends
      * /ktt-db/app/... to it.
      * @return The server root including the scheme, without a trailing slash.

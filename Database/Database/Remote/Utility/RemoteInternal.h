@@ -1,43 +1,18 @@
 #pragma once
 
-// Internal to the remote database client (not exported): what the source files of RemoteDatabase share. The request
-// helpers are defined in RemoteDatabase.cpp, the source code helpers in RemoteDatabaseSourceCode.cpp. The request
-// and response bodies are the wire types in Wire/.
+// Internal to the remote database client (not exported): the source code helpers that RemoteDatabase.cpp shares with
+// RemoteDatabaseSourceCode.cpp, where they are defined. The request helpers are in RemoteCall.h, the request and
+// response bodies are the wire types in Wire/.
 
 #include <cstddef>
-#include <functional>
 #include <optional>
-#include <string>
-#include <string_view>
 #include <vector>
-
-#include <json.hpp>
 
 #include <Api/Info/DatabaseTuningInfo.h>
 #include <Database/Remote/RemoteDatabase.h>
 
 namespace ktt::db
 {
-
-class RemoteClient;
-
-/** @fn std::optional<nlohmann::json> CallRemote(const RemoteClient& client, const std::string& operation,
- * std::string_view method, const std::string& path, const nlohmann::json* body, bool notFoundIsEmpty, long* status)
- * Sends one request and returns its JSON body, mapping the statuses as every RemoteDatabase method does (see Call in
- * RemoteDatabase.cpp): 200 and 201 succeed, a 404 with a ktt-db error body is std::nullopt when notFoundIsEmpty, and
- * everything else throws a KttException that names the operation and never contains the API key.
- * @param status If not null, receives the status of a successful response (200 or 201).
- */
-std::optional<nlohmann::json> CallRemote(const RemoteClient &client, const std::string &operation,
-    std::string_view method, const std::string &path, const nlohmann::json *body, bool notFoundIsEmpty,
-    long *status = nullptr);
-
-/** @fn void TranslateRemote(const std::string& operation, const RemoteClient& client,
- * const std::function<void()>& function)
- * Runs the body of a public method so that a JSON error or a KttException becomes a KttException that starts with the
- * operation and has no API key (see Translate in RemoteDatabase.cpp).
- */
-void TranslateRemote(const std::string &operation, const RemoteClient &client, const std::function<void()> &function);
 
 /** @fn size_t GetSourceFingerprint(const std::vector<SourceDefinition>& definitions)
  * The source fingerprint of the definitions, computed as FingerprintUtility::GetFingerprintOfDefinitions computes it

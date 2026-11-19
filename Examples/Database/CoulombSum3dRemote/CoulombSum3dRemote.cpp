@@ -13,7 +13,7 @@ using namespace std;
 
 /** @class Tunes the 3D Coulomb sum and stores the results on a ktt-db server through ktt::db::RemoteDatabase.
   * Build with: premake5 gmake --remote-database [--remote-database-host=https://...]
-  * The server is fixed at build time (RemoteDatabase::GetHost, default https://localhost:8888).
+  * The server is fixed at build time (RemoteDatabase::GetHost, default https://supercuda.fi.muni.cz:8443).
   * The API key (created in the web app's settings) is read from the KTT_DB_API_KEY environment variable when it is set,
   * otherwise from the key file (RemoteDatabase::GetDefaultApiKeyPath, ~/.local/share/ktt/api-key on Linux).
   * See Examples/Database/CoulombSum3dLocal for the same example against the local SQLite database.

@@ -45,7 +45,7 @@ Shown in the remote variant,
 build with `--remote-database` and open a `RemoteDatabase` with an API key from
 the web app's settings, given by the application or read from the file `api-key`
 next to the default local database. The server is fixed at build time
-(`--remote-database-host`, default `https://localhost:8888`). The key decides the realms; see
+(`--remote-database-host`, default `https://supercuda.fi.muni.cz:8443`, reachable only on the FI MUNI VPN). The key decides the realms; see
 [README.md](README.md#remote-database). The rest of the example works the same
 with it, apart from the differences listed there (for example, `SyncFrom` is
 local only, and a limit above 1000 throws).

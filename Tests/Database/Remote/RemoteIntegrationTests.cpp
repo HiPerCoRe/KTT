@@ -2,7 +2,8 @@
 
 #if defined(KTT_REMOTE_DATABASE)
 
-// R8.4: against the ktt-db server this build talks to (RemoteDatabase::GetHost, set with the premake option
+// R8.4: against the ktt-db server this build talks to (RemoteDatabase::GetHost, by default
+// https://supercuda.fi.muni.cz:8443, which needs the FI MUNI VPN; another one is set with the premake option
 // --remote-database-host). Hidden (run it with: ./Tests "[integration]") and skipped unless KTT_DB_API_KEY is set. The
 // key needs the write permission. KTT_DB_CA_BUNDLE optionally names a CA bundle (PEM) for a server with a self-signed
 // certificate, such as the local development backend. Every run uses new random fingerprints, so it can be repeated
@@ -14,6 +15,7 @@
 #include <random>
 #include <string>
 
+#include <Api/KttException.h>
 #include <Database/Remote/RemoteDatabase.h>
 #include <Database/Utility/TimeUnitGuard.h>
 
@@ -49,7 +51,30 @@ TEST_CASE("RemoteDatabase saves and reads results on a ktt-db server", "[.integr
     info.spaceInfo.sourceName = "ktt integration test";
     info.inputData = "integration";
 
-    REQUIRE_FALSE(db.GetStatsForSource(info.spaceInfo.sourceFingerprint).has_value());
+    // The first request doubles as a reachability check: a transport failure (no connection, DNS, TLS, timeout) gets a
+    // hint instead of the bare libcurl message.
+    std::optional<ktt::db::SourceStats> initialStats;
+
+    try
+    {
+        initialStats = db.GetStatsForSource(info.spaceInfo.sourceFingerprint);
+    }
+    catch (const ktt::KttException &exception)
+    {
+        const std::string message = exception.what();
+
+        // RemoteClient reports a transport failure as "ktt-db request <method> <path> failed...", which the
+        // operation's name then prefixes; an HTTP error status has no such part.
+        if (message.find("ktt-db request ") != std::string::npos)
+        {
+            FAIL("Cannot reach the ktt-db server " << ktt::db::RemoteDatabase::GetHost() << ": " << message
+                << "\nYou must be connected to the FI MUNI VPN, or the server is down :D");
+        }
+
+        throw;
+    }
+
+    REQUIRE_FALSE(initialStats.has_value());
     REQUIRE(db.SimpleGetBestResults(info).empty());
 
     {

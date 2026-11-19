@@ -474,7 +474,7 @@ newoption
 {
     trigger = "remote-database-host",
     value = "URL",
-    description = "Server the remote database client talks to, fixed at build time (default https://localhost:8888)"
+    description = "Server the remote database client talks to, fixed at build time (default https://supercuda.fi.muni.cz:8443)"
 }
 
 -- Helper function to add example projects
