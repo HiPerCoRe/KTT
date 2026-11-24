@@ -446,7 +446,7 @@ void ExampleBase::Preheat() {
     if (m_preheatingSeconds > 0) {
         cout << "\n--- Preheating GPU... ---" << endl;
         m_tuner->SetSearcher(m_kernel, make_unique<ktt::RandomSearcher>());
-        m_tuner->Tune(m_kernel, make_unique<ktt::TuningDuration>(m_preheatingSeconds));
+        m_tuner->Tune(m_kernel, make_unique<ktt::TuningDuration>(m_preheatingSeconds), m_preciseParams);
         m_tuner->ClearConfigurationData(m_kernel);
         cout << "--- Preheating complete ---\n" << endl;
     }
