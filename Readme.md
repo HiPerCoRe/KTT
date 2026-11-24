@@ -85,7 +85,6 @@ systems are Linux and Windows.
     - `--platform=vendor` Specifies SDK used for building KTT. May be useful when multiple SDKs are installed.
     - `--profiling=library` Enables compilation of kernel profiling functionality using the specified library.
     - `--power-usage` Enables compilation of device power usage collection functionality. This feature is currently supported only on Nvidia platform.
-    - `--power-usage-mintime=time` Sets how long is the kernel repeated to obtain reliable power measurement, in miliseconds. THIS IS AN EXPERIMENTAL FEATURE, enforcing repeating the kernel without cleaning or changing input/output.
     - `--vulkan` Enables compilation of experimental Vulkan backend.
     - `--cpp` Enables compilation of C++ backend for CPU execution.
     - `--python` Enables compilation of Python bindings.

@@ -339,12 +339,6 @@ newoption
 }
 
 newoption
-{       
-    trigger = "power-usage-mintime",
-    description = "Sets how long is the kernel repeated to obtain reliable power measurement, in miliseconds. THIS IS AN EXPERIMENTAL FEATURE, enforcing repeating the kernel without cleaning or changing input/output."
-}        
-
-newoption
 {
     trigger = "python",
     description = "Enables compilation of Python bindings"

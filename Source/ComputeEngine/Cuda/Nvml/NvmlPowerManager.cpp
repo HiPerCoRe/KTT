@@ -9,6 +9,8 @@
 #include <Utility/Logger/Logger.h>
 #include <Utility/Timer/Timer.h>
 
+#define KTT_NVML_USE_EXPLICIT_INSTANT_POWER
+
 namespace ktt
 {
 
@@ -33,6 +35,25 @@ NvmlPowerManager::NvmlPowerManager(const CudaContext& context, const DeviceIndex
 NvmlPowerManager::~NvmlPowerManager()
 {
     CheckError(nvmlShutdown(), "nvmlShutdown");
+}
+
+uint32_t NvmlPowerManager::ReadNVMLPower(bool instant) const
+{
+    /* instant method improves precision on new hardware, but can be restricted to very low
+    frequency by NVIDIA driver */
+    uint32_t ret;
+    if (! instant) {
+        CheckError(nvmlDeviceGetPowerUsage(m_Device, &ret), "nvmlDeviceGetPowerUsage");
+    }
+    else {
+        nvmlFieldValue_t fv = {};
+        fv.fieldId = NVML_FI_DEV_POWER_INSTANT;
+        fv.scopeId = 0;
+        nvmlReturn_t rc;
+        CheckError(rc = nvmlDeviceGetFieldValues(m_Device, 1, &fv), "nvmlDeviceGetFieldValues");
+        ret = fv.value.uiVal;
+    }
+    return ret;
 }
 
 void NvmlPowerManager::StartCollection()
@@ -232,7 +253,7 @@ void NvmlPowerManager::CollectPowerSamples()
 {
     m_SampleTimes.push_back(std::chrono::steady_clock::now());
     uint32_t initialValue;
-    CheckError(nvmlDeviceGetPowerUsage(m_Device, &initialValue), "nvmlDeviceGetPowerUsage");
+    initialValue = ReadNVMLPower();
     m_PowerSamples.push_back(initialValue);
     CheckError(nvmlDeviceGetTemperature(m_Device, NVML_TEMPERATURE_GPU, &initialValue), "nvmlDeviceGetTemperature");
     m_TempSamples.push_back(initialValue);
@@ -267,8 +288,7 @@ void NvmlPowerManager::CollectPowerSamples()
         timer.Restart();
 
         m_SampleTimes.push_back(std::chrono::steady_clock::now());
-        uint32_t value;
-        CheckError(nvmlDeviceGetPowerUsage(m_Device, &value), "nvmlDeviceGetPowerUsage");
+        uint32_t value = ReadNVMLPower();
         m_PowerSamples.push_back(value);
 
 	    uint32_t temp;

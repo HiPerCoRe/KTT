@@ -27,11 +27,6 @@ protected:
         m_randomizeSleep = false;
 
         UseFastMath();
-
-        // Set precise measurement by default.
-        if (m_preciseParams == nullopt) {
-            m_preciseParams = ktt::PreciseMeasurementParameters(2000, 20000, 0.005, ktt::DurationCalculationMethod::Minimum);
-        }
     }
 
     friend ExampleBase;

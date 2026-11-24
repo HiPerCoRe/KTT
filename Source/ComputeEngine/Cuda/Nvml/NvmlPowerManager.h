@@ -11,6 +11,15 @@
 
 #include <KttTypes.h>
 
+// NVML_FI_DEV_POWER_INSTANT was introduced in the CUDA 12.2 headers. KTT links nvidia-ml from the
+// NVIDIA driver rather than the toolkit, and any R535 or newer driver serves this field regardless
+// of the toolkit version, so the only problem with an older header is the missing definition. The
+// field id is stable ABI, so define it when it is absent. This keeps the build working against the
+// CUDA 12.0 nvml.h still shipped by current distribution packages.
+#ifndef NVML_FI_DEV_POWER_INSTANT
+    #define NVML_FI_DEV_POWER_INSTANT 186
+#endif // NVML_FI_DEV_POWER_INSTANT
+
 namespace ktt
 {
 
@@ -18,6 +27,7 @@ class CudaContext;
 
 class NvmlPowerManager
 {
+    uint32_t ReadNVMLPower(bool instant = false) const;
 public:
     // Note that sampling frequency over 300 will cause large variance in number of collected samples due to driver overhead
     explicit NvmlPowerManager(const CudaContext& context, const DeviceIndex device, const uint32_t samplingFrequency = 100);
