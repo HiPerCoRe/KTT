@@ -854,16 +854,18 @@ multi-threading via OpenMP or other parallelization libraries. C++ kernels are c
 
 C++ kernels use a different signature compared to CUDA/OpenCL kernels. The kernel function must be declared with `extern "C"` linkage and accept two parameters:
 * `void** buffers` - An array of pointers to buffer data (vector arguments)
-* `size_t* sizes` - An array containing buffer sizes followed by scalar argument values
+* `size_t* sizes` - An array containing buffer sizes
+* `ktt::ScalarType* scalars` - An array of unions containing scalar arguments. The type definition is injected
+    to the top of the file by the JIT compiler, but it can also be `#include`d for LSP support, see notes below.
 
 The signature format is:
 ```cpp
-extern "C" void kernelName(void** buffers, size_t* sizes)
+extern "C" void kernelName(void** buffers, size_t* sizes, ktt::ScalarType* scalarValues)
 ```
 
-The `buffers` array contains pointers to vector arguments in the order they were added via `SetArguments()`. The `sizes` array layout is:
-* First N entries: size in bytes for each vector argument (N = number of vector arguments)
-* Following entries: scalar values (cast to `size_t`) in the order they were added via `SetArguments()`
+The `buffers` array contains pointers to vector arguments in the order they were added via `SetArguments()`. 
+The `sizes` array contains size in bytes for each vector argument.
+The `scalars` array contains values of scalar arguments in the order they were added via `SetArguments()`
 
 **Example: SAXPY (Single-precision A*X Plus Y) with vector and scalar arguments**
 ```cpp
@@ -878,11 +880,13 @@ The `buffers` array contains pointers to vector arguments in the order they were
 // buffers[1] = y float* (read-write)
 // sizes[0] = x buffer size in bytes
 // sizes[1] = y buffer size in bytes
-// sizes[2] = alpha value (2.5f) passed as size_t, needs to be reinterpreted as float
+// scalars[0] = alpha value (2.5f) passed as ScalarType union, needs to access 
+//              scalars[0].Float to be interpreted as float
 #include <cstddef>
 #include <cstdint>
+#include "ComputeEngine/Cpp/CppKernelDefines.h"
 
-extern "C" void saxpy(void** buffers, size_t* sizes) {
+extern "C" void saxpy(void** buffers, size_t* sizes, ktt::ScalarType* scalars) {
     // Get element count from first vector argument's size
     size_t count = sizes[0] / sizeof(float);
     
@@ -890,13 +894,8 @@ extern "C" void saxpy(void** buffers, size_t* sizes) {
     const float* x = static_cast<const float*>(buffers[0]);
     float* y = static_cast<float*>(buffers[1]);
     
-    // Reinterpret the size_t scalar value as float
-    // The scalar was passed as size_t (64-bit), but contains the bit pattern of a float (32-bit)
-    // We take the lower 32 bits and reinterpret them as float
-    uint32_t alpha_bits = static_cast<uint32_t>(sizes[2] & 0xFFFFFFFF);
-    float alpha;
-    static_assert(sizeof(alpha) == sizeof(alpha_bits), "Size mismatch");
-    memcpy(&alpha, &alpha_bits, sizeof(float));
+    // Interpret the scalar union as float
+    float alpha = scalars[0].Float;
     
     // Perform SAXPY computation
     for (size_t i = 0; i < count; ++i) {
@@ -906,12 +905,15 @@ extern "C" void saxpy(void** buffers, size_t* sizes) {
 ```
 
 **Important notes about scalar arguments:**
-* Scalar values are passed as `size_t` (64-bit unsigned integer) in the `sizes` array
-* For integer scalars, you can use them directly after casting
-* For floating-point scalars (float, double), you need to reinterpret the bits:
-  - For `float`: extract lower 32 bits (`sizes[N] & 0xFFFFFFFF`) and use `memcpy` or `reinterpret_cast`
-  - For `double`: use the full 64-bit value directly
-* The order of scalars in `sizes` matches the order they were added via `SetArguments()`
+ScalarType is a union with one member per ArgumentDataType: Char, UnsignedChar, Short, UnsignedShort, Int, 
+UnsignedInt, Long, UnsignedLong, Float and Double. The member names match the enumerators, so a scalar added
+with AddArgumentScalar(2.5f) is read as scalars[0].Float.
+The Half type is passed through the UnsignedShort member, which holds the IEEE 754 binary16 bit pattern,
+because half is not a type in the C++ standard.
+
+The ScalarType definition is injected into the beginning of every C++ kernel upon JIT compilation.
+It has an include guard, so it is safe to also #include the header for LSP support.
+The header itself can be found at `Source/ComputeEngine/Cpp/CppKernelDefines.h`.
 
 #### C++ backend initialization
 
