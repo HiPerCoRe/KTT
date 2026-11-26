@@ -122,7 +122,14 @@ public:
         if (!simpleResults.empty())
         {
             const auto bestConfig = simpleResults[0].GetConfiguration();
-            const auto bestResult = m_tuner->Run(m_kernel, bestConfig, {});
+            // With profiling on, each Run() is one profiling pass; the CUPTI session stays open until all passes
+            // are done and would block profiling of any other configuration, so run the remaining passes too.
+            ktt::KernelResult bestResult;
+            do
+            {
+                bestResult = m_tuner->Run(m_kernel, bestConfig, {});
+            }
+            while (bestResult.HasRemainingProfilingRuns());
             cout << "Re-ran best known configuration: " << bestResult.GetTotalDuration()
                  << " ns" << endl;
         }
