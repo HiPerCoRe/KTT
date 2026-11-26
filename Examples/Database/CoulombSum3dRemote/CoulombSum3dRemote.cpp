@@ -97,7 +97,8 @@ public:
         // The same kind of selection as the predicate query above, written as a filter and run on the server in one
         // request. Fingerprints are string literals in the filter language.
         ktt::db::ResultQuery resultQuery;
-        resultQuery.filter = "source/fingerprint eq '" + to_string(tuningInfo.spaceInfo.sourceFingerprint) + "'"
+        resultQuery.filter = "source/fingerprint eq '" + to_string(tuningInfo.spaceInfo.sourceFingerprint) + "'" 
+                           + "and space/fingerprint eq '" + to_string(tuningInfo.spaceInfo.spaceFingerprint) + "'"
                            + " and run/input_data eq '" + inputData + "'";
         resultQuery.orderBy = "duration asc";
         resultQuery.top = 5;
@@ -123,7 +124,7 @@ public:
         {
             const auto bestConfig = simpleResults[0].GetConfiguration();
             const auto bestResult = m_tuner->Run(m_kernel, bestConfig, {});
-            cout << "Re-ran best known configuration: " << bestResult.GetTotalDuration()
+            cout << "Re-run best known configuration: " << bestResult.GetTotalDuration()
                  << " ns" << endl;
         }
 
